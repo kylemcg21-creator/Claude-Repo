@@ -1,0 +1,58 @@
+{
+  "anime-to-life": {
+    "label": "Anime to Life",
+    "description": "Transforms anime, art, or 3D rendering images into photorealistic cosplay-style photographs.",
+    "requires_image": true,
+    "aspect_ratio": null,
+    "prompt": "The uploaded image is an anime / art / 3D rendering. Create a photorealistic photograph featuring the same character in the same background, as if a real-person cosplayer were cosplaying the character.\n\nStrict requirements (think twice before generating):\n- The character becomes a real human cosplayer faithfully cosplaying the character in the uploaded image.\n- The cosplayer MUST keep the same physique, posture, expression, pose, position, props, eye color, and clothing as the original character.\n- Facial features retain an anime-inspired aesthetic, like a cosplayer idol with refined makeup and an elegant appearance.\n- The cosplayer's ethnicity is either Russian (Western-coded characters) or Japanese (Asian-coded characters); identify the character to decide.\n- The photograph MUST match the angle and framing of the uploaded image.\n- The background is the same as the original image but rendered in a realistic style.\n- Hyper-realistic skin with visible pores, professional photography, cinematic lighting, 85mm portrait lens, shallow depth of field."
+  },
+  "figure-to-life": {
+    "label": "Figure to Life",
+    "description": "Converts figure (toy/statue) photos into photorealistic human cosplayer images, overriding plastic textures.",
+    "requires_image": true,
+    "aspect_ratio": null,
+    "prompt": "Task: figure_to_photorealism_conversion. Convert the uploaded figure (toy/statue) photo into a photorealistic human cosplayer.\n\nReasoning mandate:\n1. Positively identify the fictional character from the input image.\n2. Determine character origin and apply ethnicity preference: Russian/Slavic features for Western-coded characters; Japanese or Korean features for Asian-coded characters.\n3. Retrieve canonical traits (eye color, hair color, skin tone, body type, gender) and STRICTLY match character lore, overriding any toy plastic/paint inaccuracies.\n4. Synthesize a background environment consistent with the character's narrative origin.\n\nSubject: a pretty human cosplayer with delicate professional makeup and hyper-realistic skin texture (pores and imperfections). Pose exactly matches the input figure's pose. Costume is a high-quality fabric/latex/leather replica of the figure's outfit (translate plastic to real materials), matching the reference.\nEnvironment: replace the toy stand with a cinematic, lore-appropriate setting and soft volumetric lighting.\nCamera: DSLR photography, 85mm portrait lens, shallow bokeh background.\nReference influence: use the uploaded figure for pose and structure ONLY; ignore plastic texture, toy joints, and paint inaccuracies."
+  },
+  "photo-restoration": {
+    "label": "Photo Restoration",
+    "description": "Restores vintage and blurry photos to high-definition 8k images while preserving identity.",
+    "requires_image": true,
+    "aspect_ratio": null,
+    "prompt": "High-fidelity restoration of this vintage photograph. Transform this blurry image into a crystal-clear, 8k resolution modern photograph. Sharpen all details, remove film grain, and correct focus. Enhance facial features to be lifelike and highly detailed, ensuring realistic skin texture and eye clarity. Fix lighting to be balanced and natural. Upscale to high definition while preserving the original identity, pose, and composition. Professional portrait photography, shot on an 85mm lens, f/1.8, photorealistic, cinematic lighting. Constraint: while largely improving the quality of the photo, the restored image must remain identical to the original in identity and composition."
+  },
+  "imax-portrait": {
+    "label": "IMAX Portrait",
+    "description": "Expands and recomposes images into an IMAX 70mm portrait style (1.43:1) with Christopher Nolan aesthetics.",
+    "requires_image": true,
+    "aspect_ratio": "4:3",
+    "prompt": "IMAX 70mm portrait photography. 1.43:1 aspect ratio. Christopher Nolan style. 80mm lens, f/1.4 aperture. Shallow depth of field. The subject is perfectly centered within the new, taller frame. Ample headroom is added above the subject, ensuring no part of the head is cut off. There is comfortable padding space around the entire character, creating a balanced composition. High fidelity texture.\n\nProcess: identify the main subject and the existing lighting direction in the input image. Create a larger canvas, re-compose by centering the subject with breathing room above the head and around the sides, and fill the new surrounding areas with seamless bokeh and 70mm film grain consistent with the original environment.\nAvoid: distorted, stretched, low resolution, cropped head, cramped framing, subject too close to edge."
+  },
+  "real-mecha": {
+    "label": "Real Mecha",
+    "description": "Converts 2D/anime mecha art into photorealistic 3D/real-world visualizations.",
+    "requires_image": true,
+    "aspect_ratio": null,
+    "prompt": "A photorealistic photograph of a mechanical unit, retaining the EXACT chassis design, silhouette, posture, and weapon loadout from the uploaded image.\nMaterials: replace drawn textures with realistic hard-surface materials - painted automotive metal, weathered steel, brushed aluminum, carbon fiber, and reinforced glass.\nDetails: functioning machine details such as grease in joints and heat discoloration on exhausts. Brand new condition, surface is clean, NO dirt, NO dust, NO rust.\nSensors: optical sensors as functional hardware - lenses, reflective glass, glowing LED arrays (no cartoon eyes).\nEnvironment: photorealistic 3D environment matching the original background, with realistic textures, volumetric lighting, atmospheric haze, and physically accurate shadows.\nPhotography: match the exact angle, framing, and dramatic lighting direction of the source. Use the uploaded image strictly to control structure and pose."
+  },
+  "character-reference-sheet": {
+    "label": "Character Reference Sheet",
+    "description": "Generates a 3:2 character reference sheet: detailed portrait, full-body front, and full-body back.",
+    "requires_image": true,
+    "aspect_ratio": "3:2",
+    "prompt": "You are an expert character designer creating a high-fidelity character reference sheet. Generate a single cohesive image in 3:2 aspect ratio divided into three distinct columns:\n1. Detailed Portrait (Left): close-up of the character's face capturing exact eye color, facial features, makeup, and head-worn accessories in high detail.\n2. Full-Body Front View (Center): head-to-toe front view clearly displaying the entire outfit, proportions, and frontal details.\n3. Full-Body Back View (Right): head-to-toe back view showing hair styling, rear outfit details, and accessories not visible from the front.\n\nStyle and fidelity: NOT a rough sketch sheet. Perfectly mirror the source material's style, lighting, and rendering quality (photorealistic, 3D render, or specific digital art style). Keep all details consistent - eye color, clothing textures, accessories, and color palettes - captured accurately from the provided samples. Use a clean, flat, simple background with a color tone that complements the design while keeping the character the sole focus. Produce a professional-grade asset with 100% stylistic and design continuity with the source."
+  },
+  "j-idol": {
+    "label": "J-Idol Portrait",
+    "description": "Creates photorealistic J-Idol gravure portraits with 2:3 knee-up framing, dreamy bokeh, and rim lighting.",
+    "requires_image": true,
+    "aspect_ratio": "2:3",
+    "prompt": "Create a completely NEW, original photorealistic gravure portrait in the J-Idol style, using the reference image ONLY for character identity (hair color/style, eye color, costume). Do NOT copy the reference composition or pose.\n\nFace mapping: if the reference is a real photo, recreate the original face as accurately as possible; if it is Western-coded anime/game CGI, use the face of a young beautiful Russian woman with features identical to the character; if Asian-coded, use a young pretty Japanese woman with features identical to the character.\nComposition: 2:3 vertical, knee-up shot with ample negative space so the subject is comfortably framed and pops.\nColor grade: soft, dreamy, ethereal cinematic grade; derive the overall palette and background tones harmoniously from the character's outfit.\nBackground: extremely heavy, smooth creamy bokeh in tones matching the outfit.\nPose: tasteful, elegant gravure pose with natural hand placement; delicate professional makeup with soft well-defined eyes and dewy tones; confident direct eye contact.\nLighting: professional cover-style lighting; face exceptionally well-lit with soft flattering front or three-quarter light and distinct highlights, dramatic side lighting to sculpt form, and a strong rim light to separate the subject from the background.\nTexture: skin shows a moist, dewy sheen that catches highlights.\nVerify the prompt includes precise eye color, detailed costume cloth patterns, jewelry/earrings if applicable, dewy skin highlights, and ample negative space. Produce a polished, professional editorial portrait."
+  },
+  "j-cover": {
+    "label": "J-Cover Magazine",
+    "description": "Designs a J-Media magazine cover via 20% outpainting with bilingual typography, barcode, and lore details.",
+    "requires_image": true,
+    "aspect_ratio": null,
+    "prompt": "ROLE: Expert magazine layout designer and image editor. This is an IMAGE EDITING task using the provided image as a direct reference - do NOT generate a new character or change the character's features.\n\nSTEP 0 - Layout analysis: analyze the input image's composition, character pose, and negative space; plan placement of titles, captions, barcode, and icons without overlapping the face or critical details.\nSTEP 1 - Outpainting & composition: scale the original subject down by exactly 20% (zoom out slightly), maintain the ORIGINAL aspect ratio, anchor the character at bottom-center, and seamlessly outpaint the background into the new 20% margin around the top and sides, matching depth of field and lighting. The character's face and details stay IDENTICAL, just slightly smaller.\nSTEP 2 - Typography & layout: auto-sample the dominant outfit color for the main title font. Main title (Japanese): a bold, canon-accurate title placed at the very top, behind the character's head for depth. Subtitles (Japanese): the character's name and vertical mood text floating in the new side space. Character name & intro (English): large character name with a small evocative intro line beside the character in negative space. Captions (English): short horizontal teasers scattered in remaining negative space.\nSTEP 3 - Graphic elements: add a lore faction/game icon in a top corner; a barcode in a bottom corner that does not cover the character's legs or feet; a random Japanese yen price; and a plausible month/year date.\nOutput goal: a high-quality magazine cover scan where the character is still large and prominent (~80% scale) with just enough new background to fit the Japanese title on top and English captions on the sides."
+  }
+}
