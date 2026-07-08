@@ -503,14 +503,19 @@
             AI draft
           </div>
           <div class="demo-body">
-            <div class="demo-out" id="demo-out"><span class="placeholder">Your drafted report will appear here for review.</span></div>
+            <div class="demo-out" id="demo-out" aria-live="polite" aria-busy="false"><span class="placeholder">Your drafted report will appear here for review.</span></div>
             <div class="approve-row" id="demo-approve">
               <button class="btn btn-primary btn-sm" id="demo-approve-btn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 Approve &amp; save
               </button>
+              <button class="btn btn-ghost btn-sm" id="demo-regen-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg>
+                Regenerate
+              </button>
               <button class="btn btn-ghost btn-sm" id="demo-redraft-btn">Discard &amp; edit</button>
             </div>
+            <p class="demo-hint" id="demo-disclaimer" style="display:none;">AI-generated from your notes. Review for accuracy before approving.</p>
           </div>
         </div>
       </div>
@@ -660,6 +665,8 @@
   var approveRow = document.getElementById("demo-approve");
   var approveBtn = document.getElementById("demo-approve-btn");
   var redraftBtn = document.getElementById("demo-redraft-btn");
+  var regenBtn = document.getElementById("demo-regen-btn");
+  var disclaimer = document.getElementById("demo-disclaimer");
 
   // Minimal, safe Markdown-ish renderer for headings, bold and bullet lists.
   function esc(s) {
@@ -696,49 +703,92 @@
       : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2.5 6.5L22 12l-6.5 2.5L13 21l-2.5-6.5L4 12l6.5-2.5L13 3Z"/></svg> Draft report with AI';
   }
 
-  function showDraft(text) {
-    outEl.innerHTML =
-      '<div class="draft-banner">' +
-      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>' +
-      'AI draft · needs approval</div>' + render(text);
+  var DRAFT_BANNER =
+    '<div class="draft-banner">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>' +
+    'AI draft · needs approval</div>';
+
+  var SAMPLE_DRAFT =
+    "## Summary\n" +
+    "Routine inspection of **Transformer 3**. Minor surface corrosion and loose access-panel hardware noted; pressure reading within normal range. All items photographed.\n\n" +
+    "## Observations\n" +
+    "- Lower mounting bracket shows surface rust, approx. 1/8\" deep.\n" +
+    "- Pressure gauge reads 42 psi — within normal operating range.\n" +
+    "- Access panel screws found loose; two were tightened on site.\n\n" +
+    "## Recommended Actions\n" +
+    "- Monitor bracket corrosion; schedule treatment or replacement if it progresses.\n" +
+    "- Re-torque remaining access-panel fasteners on next visit.\n\n" +
+    "## Items to confirm\n" +
+    "- Total number of access-panel screws and how many remain loose.\n\n" +
+    "_Demo draft — connect the report API (server/) for live output._";
+
+  function paint(text) {
+    outEl.innerHTML = DRAFT_BANNER + render(text);
+  }
+  function finishDraft() {
+    outEl.setAttribute("aria-busy", "false");
     approveRow.classList.add("show");
+    disclaimer.style.display = "block";
   }
 
-  if (runBtn) {
-    runBtn.addEventListener("click", function () {
-      var notes = (notesEl.value || "").trim();
-      if (!notes) { notesEl.focus(); return; }
-      setLoading(true);
-      approveRow.classList.remove("show");
-      outEl.innerHTML = '<span class="placeholder">Reading your notes and drafting…</span>';
+  // Reveal the fallback sample progressively so it feels like live drafting.
+  function typeOut(text) {
+    var i = 0, step = Math.max(2, Math.round(text.length / 90));
+    outEl.setAttribute("aria-busy", "true");
+    (function tick() {
+      i = Math.min(text.length, i + step);
+      paint(text.slice(0, i));
+      if (i < text.length) { setTimeout(tick, 24); }
+      else { finishDraft(); setLoading(false); }
+    })();
+  }
 
-      fetch("/api/draft-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: notes, location: (locEl.value || "").trim() })
+  function streamDraft() {
+    var notes = (notesEl.value || "").trim();
+    if (!notes) { notesEl.focus(); return; }
+    setLoading(true);
+    approveRow.classList.remove("show");
+    disclaimer.style.display = "none";
+    outEl.setAttribute("aria-busy", "true");
+    outEl.innerHTML = '<span class="placeholder">Reading your notes and drafting…</span>';
+
+    fetch("/api/draft-report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: notes, location: (locEl.value || "").trim() })
+    })
+      .then(function (r) {
+        if (!r.ok || !r.body) throw new Error("bad status");
+        var reader = r.body.getReader();
+        var decoder = new TextDecoder();
+        var buf = "", acc = "";
+        function pump() {
+          return reader.read().then(function (res) {
+            if (res.done) { finishDraft(); setLoading(false); return; }
+            buf += decoder.decode(res.value, { stream: true });
+            var frames = buf.split("\n\n");
+            buf = frames.pop();
+            frames.forEach(function (frame) {
+              var ev = (frame.match(/event: (.*)/) || [])[1];
+              var dm = frame.match(/data: (.*)/);
+              if (!dm) return;
+              var data = JSON.parse(dm[1]);
+              if (ev === "delta") { acc += data.text; paint(acc); }
+              else if (ev === "error") { throw new Error(data.error); }
+            });
+            return pump();
+          });
+        }
+        return pump();
       })
-        .then(function (r) { if (!r.ok) throw new Error("bad status"); return r.json(); })
-        .then(function (data) { showDraft(data.draft || "No draft returned."); })
-        .catch(function () {
-          // The backend isn't running (e.g. static-only preview) — show a representative draft.
-          showDraft(
-            "## Summary\n" +
-            "Routine inspection of **Transformer 3**. Minor surface corrosion and loose access-panel hardware noted; pressure reading within normal range. All items photographed.\n\n" +
-            "## Observations\n" +
-            "- Lower mounting bracket shows surface rust, approx. 1/8\" deep.\n" +
-            "- Pressure gauge reads 42 psi — within normal operating range.\n" +
-            "- Access panel screws found loose; two were tightened on site.\n\n" +
-            "## Recommended Actions\n" +
-            "- Monitor bracket corrosion; schedule treatment or replacement if it progresses.\n" +
-            "- Re-torque remaining access-panel fasteners on next visit.\n\n" +
-            "## Items to confirm\n" +
-            "- Total number of access-panel screws and how many remain loose.\n\n" +
-            "_Demo draft — connect the report API (server/) for live output._"
-          );
-        })
-        .finally(function () { setLoading(false); });
-    });
+      .catch(function () {
+        // Backend not running (static preview) — reveal a representative draft.
+        typeOut(SAMPLE_DRAFT);
+      });
   }
+
+  if (runBtn) runBtn.addEventListener("click", streamDraft);
+  if (regenBtn) regenBtn.addEventListener("click", streamDraft);
 
   if (approveBtn) {
     approveBtn.addEventListener("click", function () {
@@ -754,6 +804,7 @@
   if (redraftBtn) {
     redraftBtn.addEventListener("click", function () {
       approveRow.classList.remove("show");
+      disclaimer.style.display = "none";
       outEl.innerHTML = '<span class="placeholder">Edit your notes and draft again.</span>';
       notesEl.focus();
     });

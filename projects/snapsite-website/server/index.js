@@ -36,8 +36,16 @@ app.post("/api/draft-report", async (req, res) => {
     ? `Project location: ${location}\n\nField notes:\n${notes}`
     : `Field notes:\n${notes}`;
 
+  // Stream the draft to the browser (Server-Sent Events) so text appears as it's
+  // written, instead of blocking on a spinner until the full report is ready.
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders?.();
+
+  const send = (event, data) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+
   try {
-    // Stream to avoid request timeouts on longer drafts; collect the final message.
     const stream = client.messages.stream({
       model: MODEL,
       max_tokens: 2048,
@@ -46,17 +54,15 @@ app.post("/api/draft-report", async (req, res) => {
       messages: [{ role: "user", content: userContent }],
     });
 
-    const message = await stream.finalMessage();
-    const draft = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n")
-      .trim();
+    stream.on("text", (delta) => send("delta", { text: delta }));
 
-    res.json({ draft, status: "needs_approval", model: MODEL });
+    await stream.finalMessage();
+    send("done", { status: "needs_approval", model: MODEL });
+    res.end();
   } catch (err) {
     console.error("draft-report error:", err);
-    res.status(502).json({ error: "Could not draft the report. Please try again." });
+    send("error", { error: "Could not draft the report. Please try again." });
+    res.end();
   }
 });
 
