@@ -31,6 +31,18 @@ const ImageIcon = (p) => (
   <Icon {...p}><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L7 19" /></Icon>
 );
 const MenuIcon = (p) => (<Icon {...p}><path d="M3 6h18M3 12h18M3 18h18" /></Icon>);
+const SparkIcon = (p) => (
+  <Icon {...p}><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2.5 6.5L22 12l-6.5 2.5L13 21l-2.5-6.5L4 12l6.5-2.5L13 3Z" /></Icon>
+);
+const FileIcon = (p) => (
+  <Icon {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></Icon>
+);
+const RefreshIcon = (p) => (
+  <Icon {...p}><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5" /></Icon>
+);
+const AlertIcon = (p) => (
+  <Icon {...p}><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></Icon>
+);
 const AppleLogo = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M16.5 1.5c.1 1-.3 2-1 2.8-.7.8-1.8 1.4-2.8 1.3-.1-1 .4-2 1-2.7.7-.8 1.9-1.4 2.8-1.4ZM20 17.3c-.5 1.2-.8 1.7-1.5 2.7-1 1.4-2.3 3.1-4 3.1-1.5 0-1.9-1-3.9-1-2 0-2.4 1-3.9 1-1.7 0-2.9-1.6-3.9-2.9C.1 17.4-.4 12.8 1.3 10c1-1.6 2.6-2.6 4.1-2.6 1.6 0 2.6 1 3.9 1 1.3 0 2-1 3.9-1 1.4 0 2.9.8 4 2.1-3.5 1.9-2.9 6.9 1 7.8Z" /></svg>
 );
@@ -78,6 +90,175 @@ const TESTIMONIALS = [
 const PINS = ["pin", "pin2", "pin3"];
 const photoTiles = (n) => Array.from({ length: n }, (_, i) => <div key={i} className={PINS[i % 3]} />);
 
+/* ── AI report drafting demo ───────────────────────────────────────────── */
+const SAMPLE_DRAFT =
+  "## Summary\n" +
+  "Routine inspection of **Transformer 3**. Minor surface corrosion and loose access-panel hardware noted; pressure reading within normal range. All items photographed.\n\n" +
+  "## Observations\n" +
+  "- Lower mounting bracket shows surface rust, approx. 1/8\" deep.\n" +
+  "- Pressure gauge reads 42 psi — within normal operating range.\n" +
+  "- Access panel screws found loose; two were tightened on site.\n\n" +
+  "## Recommended Actions\n" +
+  "- Monitor bracket corrosion; schedule treatment or replacement if it progresses.\n" +
+  "- Re-torque remaining access-panel fasteners on next visit.\n\n" +
+  "## Items to confirm\n" +
+  "- Total number of access-panel screws and how many remain loose.\n\n" +
+  "_Demo draft — connect the report API (server/) for live output._";
+
+// Minimal, safe Markdown-ish renderer for headings, bold and bullet lists.
+function renderMarkdown(md) {
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const bold = (t) => t.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  let html = "", inList = false;
+  esc(md).split("\n").forEach((line) => {
+    const h = line.match(/^(#{1,3})\s+(.*)$/);
+    const li = line.match(/^\s*[-*]\s+(.*)$/);
+    if (h) {
+      if (inList) { html += "</ul>"; inList = false; }
+      const lvl = h[1].length + 1;
+      html += `<h${lvl}>${bold(h[2])}</h${lvl}>`;
+    } else if (li) {
+      if (!inList) { html += "<ul style='margin:6px 0 6px 18px'>"; inList = true; }
+      html += `<li>${bold(li[1])}</li>`;
+    } else {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += line.trim() === "" ? "<br>" : `<div>${bold(line)}</div>`;
+    }
+  });
+  if (inList) html += "</ul>";
+  return html;
+}
+
+function ReportDemo() {
+  const [location, setLocation] = React.useState("Substation 14 — Riverside");
+  const [notes, setNotes] = React.useState(
+    "lower bracket on transformer 3 has surface rust, maybe an eighth inch deep. gauge reads 42 psi looks normal. access panel screws were loose, tightened two of them. photographed all three."
+  );
+  const [draft, setDraft] = React.useState("");
+  const [phase, setPhase] = React.useState("idle"); // idle | loading | done | approved
+  const notesRef = React.useRef(null);
+
+  const busy = phase === "loading";
+
+  async function run() {
+    if (!notes.trim()) { notesRef.current?.focus(); return; }
+    setPhase("loading");
+    setDraft("");
+    try {
+      const res = await fetch("/api/draft-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: notes.trim(), location: location.trim() }),
+      });
+      if (!res.ok || !res.body) throw new Error("bad status");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "", acc = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const frames = buf.split("\n\n");
+        buf = frames.pop();
+        for (const frame of frames) {
+          const ev = (frame.match(/event: (.*)/) || [])[1];
+          const dm = frame.match(/data: (.*)/);
+          if (!dm) continue;
+          const data = JSON.parse(dm[1]);
+          if (ev === "delta") { acc += data.text; setDraft(acc); }
+          else if (ev === "error") throw new Error(data.error);
+        }
+      }
+      setPhase("done");
+    } catch {
+      // Backend not running (static preview) — reveal a representative draft.
+      await typeOut(SAMPLE_DRAFT, setDraft);
+      setPhase("done");
+    }
+  }
+
+  return (
+    <section id="ai-reports" className="demo">
+      <div className="wrap">
+        <div className="sec-head">
+          <span className="eyebrow">AI report drafting</span>
+          <h2>Turn rough field notes into a clean report</h2>
+          <p className="lead">Paste the kind of quick note an inspector would dictate on site. SnapSite's AI drafts the report — then waits for approval, exactly like it does in the app.</p>
+        </div>
+        <div className="demo-grid">
+          <div className="demo-panel">
+            <div className="demo-panel-top"><MicIcon size={18} style={{ color: "var(--primary)" }} /> Field notes</div>
+            <div className="demo-body">
+              <label className="demo-label" htmlFor="demo-loc">Project location (optional)</label>
+              <input className="demo-input" id="demo-loc" type="text" placeholder="Substation 14 — Riverside"
+                value={location} onChange={(e) => setLocation(e.target.value)} />
+              <label className="demo-label" htmlFor="demo-notes" style={{ marginTop: 16 }}>What you saw on site</label>
+              <textarea className="demo-textarea" id="demo-notes" ref={notesRef}
+                value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <div className="demo-actions">
+                <button className="btn btn-primary" onClick={run} disabled={busy}>
+                  {busy ? <><span className="spinner" /> Drafting…</> : <><SparkIcon size={16} /> Draft report with AI</>}
+                </button>
+                <span className="demo-hint" style={{ margin: 0 }}>Nothing is saved until you approve it.</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="demo-panel">
+            <div className="demo-panel-top"><FileIcon size={18} style={{ color: "var(--secondary)" }} /> AI draft</div>
+            <div className="demo-body">
+              <div className="demo-out" aria-live="polite" aria-busy={busy}>
+                {draft ? (
+                  <>
+                    <div className={`draft-banner${phase === "approved" ? " approved" : ""}`}>
+                      {phase === "approved"
+                        ? <><CheckIcon size={14} strokeWidth={2.5} /> Approved &amp; saved to project</>
+                        : <><AlertIcon size={14} strokeWidth={2.5} /> AI draft · needs approval</>}
+                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: renderMarkdown(draft) }} />
+                  </>
+                ) : (
+                  <span className="placeholder">
+                    {busy ? "Reading your notes and drafting…" : "Your drafted report will appear here for review."}
+                  </span>
+                )}
+              </div>
+              {phase === "done" && (
+                <>
+                  <div className="approve-row show">
+                    <button className="btn btn-primary btn-sm" onClick={() => setPhase("approved")}>
+                      <CheckIcon size={16} strokeWidth={2.5} /> Approve &amp; save
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={run}><RefreshIcon size={15} /> Regenerate</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => { setPhase("idle"); setDraft(""); notesRef.current?.focus(); }}>
+                      Discard &amp; edit
+                    </button>
+                  </div>
+                  <p className="demo-hint">AI-generated from your notes. Review for accuracy before approving.</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Reveal fallback text progressively so it feels like live drafting.
+function typeOut(text, setDraft) {
+  return new Promise((resolve) => {
+    let i = 0;
+    const step = Math.max(2, Math.round(text.length / 90));
+    (function tick() {
+      i = Math.min(text.length, i + step);
+      setDraft(text.slice(0, i));
+      if (i < text.length) setTimeout(tick, 24);
+      else resolve();
+    })();
+  });
+}
+
 /* ── Component ─────────────────────────────────────────────────────────── */
 export default function SnapSite() {
   return (
@@ -94,6 +275,7 @@ export default function SnapSite() {
             <a className="link" href="#features">Features</a>
             <a className="link" href="#how">How it works</a>
             <a className="link" href="#preview">Preview</a>
+            <a className="link" href="#ai-reports">AI reports</a>
             <a className="link" href="#pricing">Pricing</a>
             <a className="btn btn-primary" href="#download">Get the app</a>
           </nav>
@@ -237,6 +419,9 @@ export default function SnapSite() {
             </div>
           </div>
         </section>
+
+        {/* AI REPORT DRAFTING DEMO */}
+        <ReportDemo />
 
         {/* PRICING */}
         <section id="pricing" className="how">
@@ -469,5 +654,29 @@ footer a.fl:hover{color:#fff;}
 footer .brand{color:#fff;}
 footer .brand-mark{background:#fff;color:var(--primary);}
 .foot-bottom{border-top:1px solid rgba(255,255,255,.1);margin-top:40px;padding-top:22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:#64748b;font-size:.85rem;}
-@media (prefers-reduced-motion:reduce){*{transition:none !important;scroll-behavior:auto !important;}}
+.demo{background:#fff;}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;}
+@media (max-width:880px){.demo-grid{grid-template-columns:1fr;}}
+.demo-panel{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);box-shadow:var(--shadow-sm);overflow:hidden;}
+.demo-panel-top{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-weight:600;background:#fff;}
+.demo-body{padding:20px;}
+.demo-label{display:block;font-size:.82rem;font-weight:600;color:var(--muted-fg);margin:0 0 6px;letter-spacing:.02em;}
+.demo-input,.demo-textarea{width:100%;font-family:inherit;font-size:.95rem;color:var(--fg);padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;resize:vertical;}
+.demo-input:focus,.demo-textarea:focus{outline:none;border-color:var(--secondary);box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+.demo-textarea{min-height:150px;line-height:1.5;}
+.demo-actions{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap;}
+.demo-hint{font-size:.82rem;color:var(--muted-fg);margin-top:12px;}
+.demo-out{min-height:230px;white-space:pre-wrap;font-size:.92rem;color:#1e293b;line-height:1.6;}
+.demo-out .placeholder{color:var(--muted-fg);}
+.demo-out h1,.demo-out h2,.demo-out h3{font-size:1rem;margin:14px 0 4px;color:var(--primary);}
+.demo-out strong{color:var(--fg);}
+.draft-banner{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;color:var(--secondary);background:rgba(37,99,235,.1);padding:8px 12px;border-radius:8px;margin-bottom:14px;}
+.draft-banner.approved{color:var(--accent);background:rgba(5,150,105,.1);}
+.approve-row{display:none;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.approve-row.show{display:flex;}
+.btn-sm{padding:10px 18px;min-height:0;font-size:.9rem;}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.btn[disabled]{opacity:.65;cursor:not-allowed;transform:none;}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;scroll-behavior:auto !important;animation:none !important;}}
 `;
