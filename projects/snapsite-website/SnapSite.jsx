@@ -261,17 +261,19 @@ function typeOut(text, setDraft) {
 
 /* ── Component ─────────────────────────────────────────────────────────── */
 export default function SnapSite() {
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const closeMenu = () => setMenuOpen(false);
   return (
     <>
       <style>{CSS}</style>
 
-      <header>
+      <header className={menuOpen ? "nav-open" : undefined}>
         <div className="wrap nav">
           <a href="#top" className="brand" aria-label="SnapSite home">
             <span className="brand-mark" aria-hidden="true"><CameraIcon size={20} /></span>
             SnapSite
           </a>
-          <nav className="nav-links" aria-label="Primary">
+          <nav className="nav-links" id="primary-nav" aria-label="Primary" onClick={closeMenu}>
             <a className="link" href="#features">Features</a>
             <a className="link" href="#how">How it works</a>
             <a className="link" href="#preview">Preview</a>
@@ -279,7 +281,10 @@ export default function SnapSite() {
             <a className="link" href="#pricing">Pricing</a>
             <a className="btn btn-primary" href="#download">Get the app</a>
           </nav>
-          <button className="menu-btn" aria-label="Open menu"><MenuIcon size={26} /></button>
+          <button className="menu-btn" onClick={() => setMenuOpen((o) => !o)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} aria-controls="primary-nav">
+            <MenuIcon size={26} />
+          </button>
         </div>
       </header>
 
@@ -527,7 +532,7 @@ export default function SnapSite() {
 const CSS = `
 :root{
   --primary:#1E3A5F;--primary-700:#16304f;--on-primary:#FFFFFF;--secondary:#2563EB;
-  --accent:#059669;--accent-700:#047857;--bg:#F8FAFC;--fg:#0F172A;--muted:#F1F3F5;
+  --accent:#047857;--accent-700:#036549;--bg:#F8FAFC;--fg:#0F172A;--muted:#F1F3F5;
   --muted-fg:#64748B;--border:#E4E7EB;--destructive:#DC2626;--radius:14px;--maxw:1200px;
   --shadow-sm:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.08);
   --shadow-md:0 4px 12px rgba(15,23,42,.08),0 2px 4px rgba(15,23,42,.04);
@@ -548,6 +553,7 @@ p{margin:0;}
 .lead{font-size:1.15rem;color:var(--muted-fg);}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;font-weight:600;font-size:1rem;cursor:pointer;padding:14px 26px;border-radius:12px;border:1px solid transparent;transition:transform .2s ease,background .2s ease,box-shadow .2s ease,border-color .2s ease;min-height:48px;}
 .btn:focus-visible{outline:3px solid rgba(37,99,235,.5);outline-offset:2px;}
+a:focus-visible,button:focus-visible{outline:3px solid rgba(37,99,235,.5);outline-offset:3px;border-radius:6px;}
 .btn-primary{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm);}
 .btn-primary:hover{background:var(--accent-700);transform:translateY(-2px);box-shadow:var(--shadow-md);}
 .btn-ghost{background:#fff;color:var(--primary);border-color:var(--border);}
@@ -560,7 +566,13 @@ header{position:sticky;top:0;z-index:100;background:rgba(248,250,252,.85);backdr
 .nav-links a.link{font-weight:500;color:var(--muted-fg);transition:color .2s;}
 .nav-links a.link:hover{color:var(--fg);}
 .menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px;color:var(--primary);}
-@media (max-width:880px){.nav-links a.link{display:none;}.menu-btn{display:block;}}
+@media (max-width:880px){
+  .menu-btn{display:block;}
+  .nav-links{position:absolute;top:70px;left:0;right:0;flex-direction:column;align-items:stretch;gap:6px;background:rgba(248,250,252,.98);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 24px 20px;box-shadow:var(--shadow-md);display:none;}
+  header.nav-open .nav-links{display:flex;}
+  .nav-links a.link{display:block;padding:12px 4px;color:var(--fg);border-bottom:1px solid var(--border);}
+  .nav-links a.btn-primary{margin-top:8px;}
+}
 .hero{position:relative;overflow:hidden;background:radial-gradient(1200px 500px at 80% -10%,rgba(37,99,235,.10),transparent 60%),radial-gradient(900px 400px at 10% 10%,rgba(5,150,105,.08),transparent 60%);}
 .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:84px 0 72px;}
 @media (max-width:920px){.hero-grid{grid-template-columns:1fr;gap:40px;padding:56px 0;}}
@@ -674,7 +686,7 @@ footer .brand-mark{background:#fff;color:var(--primary);}
 .draft-banner.approved{color:var(--accent);background:rgba(5,150,105,.1);}
 .approve-row{display:none;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap;}
 .approve-row.show{display:flex;}
-.btn-sm{padding:10px 18px;min-height:0;font-size:.9rem;}
+.btn-sm{padding:11px 18px;min-height:44px;font-size:.9rem;}
 .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .btn[disabled]{opacity:.65;cursor:not-allowed;transform:none;}

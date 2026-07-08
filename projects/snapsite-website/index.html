@@ -14,8 +14,8 @@
     --primary-700: #16304f;
     --on-primary: #FFFFFF;
     --secondary: #2563EB;
-    --accent: #059669;
-    --accent-700: #047857;
+    --accent: #047857;
+    --accent-700: #036549;
     --bg: #F8FAFC;
     --fg: #0F172A;
     --muted: #F1F3F5;
@@ -61,6 +61,7 @@
     min-height: 48px;
   }
   .btn:focus-visible { outline: 3px solid rgba(37,99,235,.5); outline-offset: 2px; }
+  a:focus-visible, button:focus-visible { outline: 3px solid rgba(37,99,235,.5); outline-offset: 3px; border-radius: 6px; }
   .btn-primary { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
   .btn-primary:hover { background: var(--accent-700); transform: translateY(-2px); box-shadow: var(--shadow-md); }
   .btn-ghost { background: #fff; color: var(--primary); border-color: var(--border); }
@@ -82,8 +83,17 @@
   .nav-links a.link:hover { color: var(--fg); }
   .menu-btn { display: none; background:none; border:none; cursor:pointer; padding:8px; color: var(--primary); }
   @media (max-width: 880px) {
-    .nav-links a.link { display: none; }
     .menu-btn { display: block; }
+    .nav-links {
+      position: absolute; top: 70px; left: 0; right: 0;
+      flex-direction: column; align-items: stretch; gap: 6px;
+      background: rgba(248,250,252,.98); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 14px 24px 20px;
+      box-shadow: var(--shadow-md); display: none;
+    }
+    header.nav-open .nav-links { display: flex; }
+    .nav-links a.link { display: block; padding: 12px 4px; color: var(--fg); border-bottom: 1px solid var(--border); }
+    .nav-links a.btn-primary { margin-top: 8px; }
   }
 
   /* Hero */
@@ -239,7 +249,7 @@
   .draft-banner.approved { color: var(--accent); background: rgba(5,150,105,.1); }
   .approve-row { display:none; gap:10px; margin-top:18px; padding-top:16px; border-top:1px solid var(--border); flex-wrap:wrap; }
   .approve-row.show { display:flex; }
-  .btn-sm { padding:10px 18px; min-height:0; font-size:.9rem; }
+  .btn-sm { padding:11px 18px; min-height:44px; font-size:.9rem; }
   .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .btn[disabled] { opacity:.65; cursor:not-allowed; transform:none; }
@@ -258,7 +268,7 @@
       </span>
       SnapSite
     </a>
-    <nav class="nav-links" aria-label="Primary">
+    <nav class="nav-links" id="primary-nav" aria-label="Primary">
       <a class="link" href="#features">Features</a>
       <a class="link" href="#how">How it works</a>
       <a class="link" href="#preview">Preview</a>
@@ -266,7 +276,7 @@
       <a class="link" href="#pricing">Pricing</a>
       <a class="btn btn-primary" href="#download">Get the app</a>
     </nav>
-    <button class="menu-btn" aria-label="Open menu">
+    <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="primary-nav">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
   </div>
@@ -658,6 +668,24 @@
 
 <script>
 (function () {
+  // Mobile navigation toggle.
+  var header = document.querySelector("header");
+  var menuBtn = document.getElementById("menu-btn");
+  var nav = document.getElementById("primary-nav");
+  if (menuBtn && header && nav) {
+    var setOpen = function (open) {
+      header.classList.toggle("nav-open", open);
+      menuBtn.setAttribute("aria-expanded", String(open));
+      menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    };
+    menuBtn.addEventListener("click", function () {
+      setOpen(!header.classList.contains("nav-open"));
+    });
+    nav.addEventListener("click", function (e) {
+      if (e.target.closest("a")) setOpen(false);
+    });
+  }
+
   var runBtn = document.getElementById("demo-run");
   var notesEl = document.getElementById("demo-notes");
   var locEl = document.getElementById("demo-loc");
