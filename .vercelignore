@@ -1,0 +1,6 @@
+# Keep Vercel from mis-detecting this static site as a Python or Node app.
+# pyproject.toml (used for local tooling only) makes Vercel pick the Python
+# runtime and fail with "No python entrypoint found". The nested demo server
+# is a local-run Express backend, not part of the deployed static site.
+pyproject.toml
+projects/snapsite-website/server
