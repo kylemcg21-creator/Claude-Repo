@@ -18,21 +18,31 @@ Clone the repo and open it in [Claude Code](https://claude.ai/code) to start bui
 
   The package ships a compiled runtime binary in its PyPI wheels, so it must be installed via `pip` (not just cloned from GitHub). Import it as `from google import antigravity` — the top-level `antigravity` name is reserved by Python's stdlib easter-egg module.
 
-## Testing the root site
+## Testing the root site and demo pages
 
-The root site (`index.html`, `css/styles.css`, `js/main.js`) has no build step and
-is deployed as-is (see `vercel.json`), but its interactive JS is covered by a
-small jsdom-based test suite:
+The root site (`index.html`, `css/styles.css`, `js/main.js`) and the `demo/`
+pages have no build step and are used as-is (see `vercel.json`), but their
+DOM/CSS behavior is covered by a small jsdom-based test suite:
 
 ```sh
 npm install
-npm test
+npm test          # both suites
+npm run test:site # root site only (js/main.js)
+npm run test:demo # demo/motion-hero-demo.html only
 ```
 
-This exercises `js/main.js` (mobile nav toggle, scroll-spy highlighting,
+`test:site` exercises `js/main.js` (mobile nav toggle, scroll-spy highlighting,
 back-to-top visibility, FAQ accordion) against the real `index.html` markup.
-It's dev-only tooling — `node_modules` is gitignored and nothing here affects
-the deployed static site.
+
+`test:demo` covers `demo/motion-hero-demo.html`'s no-js progressive-enhancement
+CSS states (content visible before JS, hidden and ready to animate once JS
+takes over) plus static checks that its animation script still wires up the
+expected DOM ids, vendor import path, no-js removal, and reduced-motion
+branch. jsdom doesn't execute `<script type="module">`, so the vendored
+Motion library itself is never run in these tests.
+
+This is dev-only tooling — `node_modules` is gitignored and nothing here
+affects the deployed static site or the demo pages.
 
 ## Skills
 

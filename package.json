@@ -2,9 +2,11 @@
   "name": "blockcraft-guide-site",
   "private": true,
   "type": "module",
-  "description": "Test tooling for the root static site (index.html, css/, js/). Not a build step — the site itself remains dependency-free and deploys as-is (see vercel.json).",
+  "description": "Test tooling (jsdom) for the root static site and the demo/ HTML pages. Not a build step — these stay dependency-free and deploy/open as-is.",
   "scripts": {
-    "test": "node --test js/main.test.js"
+    "test": "npm run test:site && npm run test:demo",
+    "test:site": "node --test js/main.test.js",
+    "test:demo": "node --test demo/motion-hero-demo.test.js"
   },
   "devDependencies": {
     "jsdom": "^25.0.0"
