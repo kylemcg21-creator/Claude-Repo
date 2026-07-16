@@ -1,0 +1,9 @@
+{
+  "name": "prompt-engineering-mentor-structure-tests",
+  "private": true,
+  "type": "module",
+  "description": "Structural convention checks for this markdown-only course (curriculum numbering/headings, prompt-library template/index integrity, session log template/naming). Not a substitute for the project's real verification method: running prompts against a live model per prompt-library/README.md.",
+  "scripts": {
+    "test": "node --test structure.test.js"
+  }
+}

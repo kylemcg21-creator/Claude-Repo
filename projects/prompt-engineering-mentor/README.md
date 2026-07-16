@@ -54,6 +54,21 @@ Work modules 1–2 in order — everything else builds on them. Modules 3–4 ar
 | [05 System Design](curriculum/05-system-design.md) | Compose prompts into chains, loops, and multi-agent workflows |
 | [06 Mastery Loop](curriculum/06-mastery-loop.md) | Run the documentation and self-assessment practice that compounds skill over time |
 
+## Checking the repo's structure
+
+This project is markdown, not code — its real test is running prompts from
+`prompt-library/` against a live model and scoring the output against the
+criteria in `prompt-library/README.md`, which no automated suite can do. What
+*is* checkable without a model is whether the repo's own conventions still
+hold — every curriculum module has its standard sections, every prompt-library
+entry follows `_TEMPLATE.md` and is tagged consistently with the README index,
+and every session follows `sessions/_TEMPLATE.md`. Run it with:
+
+```sh
+cd projects/prompt-engineering-mentor
+npm test
+```
+
 ## Ground rules (inherited from the mentor)
 
 - **Always explain the why.** A prompt edit without a stated reason is a superstition, not a technique.
