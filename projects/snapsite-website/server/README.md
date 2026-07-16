@@ -22,6 +22,19 @@ Then open http://localhost:3000 — the server serves `index.html` and the demo'
 Without a running server (e.g. opening `index.html` directly), the demo falls
 back to a representative sample draft so the UI still works.
 
+## Test it
+
+```bash
+cd projects/snapsite-website/server
+npm install
+npm test
+```
+
+Tests use Node's built-in test runner and `supertest`, with a mock Anthropic
+client (no `ANTHROPIC_API_KEY` or network access needed). They cover request
+validation, the location/notes prompt assembly, the SSE `delta`/`done`/`error`
+event framing, the `needs_approval` invariant, and the request body size limit.
+
 ## Endpoint
 
 `POST /api/draft-report`
