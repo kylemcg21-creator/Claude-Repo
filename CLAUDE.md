@@ -2,44 +2,38 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What this repo is
+## Repository purpose
 
-A starter repository for experimenting with Claude Code on the web (see `README.md`). It is not a single application — it's a loose collection of static demo sites and experiments, each self-contained, plus a large set of installed AI-agent skills. There is no root build system, package manager, bundler, or test suite; everything is deployed as-is.
+This is a sandbox/starter repo for experimenting with Claude Code on the web. It is not a single application — it's a loose collection of independent, self-contained demos and mini-projects at various levels of completeness. Treat each top-level item (root site, `demo/`, each folder under `projects/`) as its own isolated context; changes in one should not assume shared tooling, build systems, or dependencies with another.
 
-## Repo layout
+## Structure
 
-- `index.html`, `css/styles.css`, `js/main.js` — the root static site: a single-page "BlockCraft Guide" (Minecraft building guide) demo. Plain HTML/CSS/vanilla JS, no framework, no build step. CSS is organized with `/* ---------- Section ---------- */` banner comments (Tokens, Header, Buttons, Hero, Cards, FAQ, etc.) inside `:root`-based custom-property tokens.
-- `demo/` — standalone animation demo(s), e.g. `motion-hero-demo.html`, which imports the local `demo/vendor/motion.bundle.js` (a vendored copy of Motion.dev) as an ES module. Fully self-contained, no build step.
-- `projects/snapsite-website/` — a second, separate static site ("SnapSite" marketing site) with its own `index.html` and a `SnapSite.jsx` (React component source, hand-authored icons, not currently wired into a build pipeline — treat it as a reference/source file for the design rather than something that gets compiled here).
-  - `projects/snapsite-website/server/` — a small Express backend (`index.js`) that powers the site's "AI report drafting" demo. It calls the Anthropic Claude API (`claude-opus-4-8`) via `@anthropic-ai/sdk`, streams the response back to the browser over SSE (`/api/draft-report`), and serves the static site from the parent directory. Requires `ANTHROPIC_API_KEY` in the environment. See `projects/snapsite-website/server/README.md` for the exact run steps and endpoint contract. Without the server running, the front-end demo falls back to a canned sample draft.
-- `.claude/skills/` and `.agents/skills/` — installed Claude Code / Codex agent skills (design, UI, brand, Vercel, animation, writing-guidelines, etc.), tracked via `skills-lock.json` (records each skill's upstream GitHub source and content hash). These are vendored dependencies, not application code — don't hand-edit files under these directories; they'd be overwritten by the skill manager.
-- `pyproject.toml` / `.venv` — local Python tooling only, for the optional `google-antigravity` SDK dependency mentioned in `README.md`. Not used by the deployed site (see Deployment below).
+- **Root site** (`index.html`, `css/styles.css`, `js/main.js`) — a static, dependency-free HTML/CSS/vanilla-JS marketing page ("BlockCraft Guide"). No build step: open `index.html` directly or serve the directory statically. `js/main.js` is an IIFE handling mobile nav toggle, scroll-spy nav highlighting, a back-to-top button, and accordion-style FAQ items.
+- **`demo/`** — standalone HTML demos (e.g. `motion-hero-demo.html`) with vendored JS libraries in `demo/vendor/` (e.g. `motion.bundle.js`). These are single-file, open-in-browser demos, not part of the root site's build.
+- **`projects/`** — independent sub-projects, each with its own README and conventions. Don't assume conventions from one apply to another:
+  - **`prompt-engineering-mentor/`** — a repo-based prompt-engineering course, not code. `MENTOR.md` holds the portable mentor system prompt (with annotations on why it's designed the way it is); `curriculum/` holds numbered lesson modules (work 01-02 in order, then 03-04 as a pair, then 05-06); `prompt-library/` is an index of proven prompts with a tagging schema (use case / format / strength) — entries only get added after being tested against real inputs, per `prompt-library/README.md`; `sessions/` logs one file per mentoring session using `_TEMPLATE.md`. When editing this project, follow its own ground rules (always explain *why* a prompt change was made; label behavioral claims as documented/widely-reproduced/untested).
+  - **`snapsite-website/`** — a static marketing site (`index.html`, `SnapSite.jsx` reference component) for a fictional field-photo/inspection app, plus a small live backend in `server/`: an Express server (`server/index.js`) exposing `POST /api/draft-report`, which streams a Claude (`claude-opus-4-8`) completion via SSE to turn field notes into a draft inspection report. Run it with `cd projects/snapsite-website/server && npm install && export ANTHROPIC_API_KEY=sk-ant-... && npm start`, then open `http://localhost:3000`. Without the server running, the front-end demo falls back to a canned sample draft. The system prompt in `server/index.js` enforces a strict rule: never invent facts not present in the notes, and the output is always `status: "needs_approval"` (nothing is auto-saved). This is the one sub-project with an automated test suite — see below.
 
-## Adding a new project/demo
+## The Zeus prompt-engineering pipeline
 
-Follow the existing pattern: each experiment lives in its own directory (either top-level like `demo/`, or under `projects/<name>/`) as a self-contained static HTML/CSS/JS bundle. Don't introduce a shared build system unless a project actually needs one — vendor any JS dependency locally (as `demo/vendor/motion.bundle.js` does) rather than adding a package manager at the root.
+`.claude/agents/zeus.md` defines a subagent meant as the first stop for messy, half-formed requests. It drives nine slash commands in `.claude/commands/` in a fixed sequence, each stage's output feeding the next: `/prompt-master` (raw input → task spec) → `/grill-me` (resolve open questions) → `/how-to` (execution roadmap) → `/48` or `/fable` (model-specific polish — pick one, not both) → `/personal-voice` (match the user's writing style) → `/anti-ai` (strip AI writing tells, using the `stop-slop` skill if available) → `/write-a-skill` (package as a reusable skill, unless it's a one-off) → `/handoff` (final handoff doc). Each command file is self-contained and can also be invoked directly outside the pipeline. Don't skip stages when running the full pipeline — the sequence is the point, not just the final output.
 
-## Running things locally
+## Agent skills
 
-- Static pages (`index.html`, `demo/*.html`, `projects/snapsite-website/index.html`) can be opened directly in a browser — no server required.
-- SnapSite's live AI-drafting endpoint needs the Express server:
-  ```sh
-  cd projects/snapsite-website/server
-  npm install
-  export ANTHROPIC_API_KEY=sk-ant-...
-  npm start
-  ```
-  Then open `http://localhost:3000`.
-- Python deps (only needed for `google-antigravity`, unrelated to the sites):
-  ```sh
-  python3 -m venv .venv
-  source .venv/bin/activate
-  pip install -e .
-  ```
-  Import it as `from google import antigravity` — the top-level `antigravity` name is reserved by Python's stdlib easter-egg module.
-
-There is no lint, test, or build command configured at the repo root.
+- `.claude/skills/` and `.agents/skills/` hold installed Claude Code / Codex agent skills (design, UI, brand, Vercel, animation, writing-guidelines, `stop-slop`, etc.), tracked via `skills-lock.json` (records each skill's upstream GitHub source and content hash). These are vendored dependencies, not application code — don't hand-edit files under these directories; they'd be overwritten by the skill manager.
+- `.claude/skills/nano-banana/` is the one exception: a repo-local, hand-maintained skill (not in `skills-lock.json`) for generating/editing images with Google's Nano Banana models, with its own `scripts/generate.py` and preset library. It requires `GEMINI_API_KEY`. Its Python deps are auto-installed on session start via the `SessionStart` hook wired in `.claude/settings.json`, which runs `.claude/hooks/install-skill-deps.sh` (idempotent — checks whether `google.genai` already imports before installing anything).
 
 ## Deployment
 
-The repo deploys to Vercel as a static site (`vercel.json`: `framework: null`, `outputDirectory: "."`). `.vercelignore` deliberately excludes `pyproject.toml` and `projects/snapsite-website/server` so Vercel doesn't mis-detect the repo as a Python or Node app — the Express server is for local use only and is not part of the deployed static output.
+- `vercel.json` deploys the repo as a static site with no build/install command (`outputDirectory: "."`) — the root `index.html` is the deployed artifact. `.vercelignore` excludes non-site content from the deploy.
+
+## Python dependency
+
+- `pyproject.toml` declares one dependency, `google-antigravity` (the Google Antigravity SDK for building Gemini-based agents), installed via a venv + `pip install -e .` (per `README.md`). It must be installed with `pip`, not just cloned, because its PyPI wheel ships a compiled runtime binary. Import it as `from google import antigravity` — the bare `antigravity` name collides with Python's stdlib easter-egg module.
+
+## Testing and verification
+
+There is no root-level package.json, test runner, or linter for the repo as a whole. Verification is project-specific:
+- Root site / `demo/`: open the HTML file in a browser and check it manually — there's no build or test step.
+- `projects/snapsite-website/server`: has an actual test suite — `cd projects/snapsite-website/server && npm install && npm test` (Node's built-in test runner + `supertest`, against a mocked Anthropic client — no `ANTHROPIC_API_KEY` or network access needed). Covers request validation, prompt assembly, SSE event framing, the `needs_approval` invariant, and the request body size limit. Run this after touching `server/index.js`.
+- `projects/prompt-engineering-mentor`: "testing" means running the prompts in `prompt-library/` against a real model and checking output against the criteria described in `prompt-library/README.md`, not automated tests.
