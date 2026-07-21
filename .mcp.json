@@ -5,15 +5,6 @@
       "args": [
         "C:/Users/kylem/.gemini/antigravity/worktrees/silly-hertz/claude-extension-integration/dist/index.js"
       ]
-    },
-    "notebooklm": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "notebooklm-mcp@latest"
-      ],
-      "env": {}
     }
   }
 }
