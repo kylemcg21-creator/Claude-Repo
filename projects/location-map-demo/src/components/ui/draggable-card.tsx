@@ -1,86 +1,176 @@
 "use client"
 
-import type React from "react"
-import { useRef, useState } from "react"
-import { motion, type PanInfo } from "framer-motion"
+// Draggable Card — Aceternity UI, as published on 21st.dev.
+// Source: https://ui.aceternity.com/components/draggable-card (MIT)
+// Install (registry): npx shadcn@latest add "https://21st.dev/r/aceternity/draggable-card"
+//
+// Two adaptations for this project, nothing else changed:
+//   1. Imports come from `framer-motion` (already a dependency) instead of the
+//      newer `motion/react` package — the hooks are identical re-exports.
+//   2. 3D depth is set via an inline `transformStyle: "preserve-3d"` instead of
+//      Tailwind v4's `transform-3d` utility, since this project is on Tailwind v3.
 
-interface DraggableCardProps {
-  children: React.ReactNode
-  /** Ref to the element the card is allowed to be dragged within. */
-  constraintsRef?: React.RefObject<HTMLElement>
-  className?: string
-  /** How far the pointer may move (px) before a press counts as a drag, not a click. */
-  dragThreshold?: number
-}
+import { cn } from "@/lib/utils"
+import React, { useRef, useState, useEffect } from "react"
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useVelocity,
+  useAnimationControls,
+} from "framer-motion"
 
-/**
- * A moveable surface that lets its child be dragged (flung) around a bounded
- * area while the child stays fully interactive.
- *
- * The "react to" part is delegated to the child: on release the card settles
- * with spring momentum, lifts on grab, and — crucially — a real drag never
- * leaks through as a click, so an interactive child (e.g. a card that expands
- * on click) does not toggle when you were only repositioning it.
- *
- * Built on framer-motion's `drag` primitive, the same foundation the 21st.dev
- * draggable components use, so no extra dependency is required.
- */
-export function DraggableCard({
-  children,
-  constraintsRef,
+export const DraggableCardBody = ({
   className,
-  dragThreshold = 6,
-}: DraggableCardProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  // Tracks whether the most recent gesture moved far enough to be a drag.
-  const didDrag = useRef(false)
+  children,
+}: {
+  className?: string
+  children?: React.ReactNode
+}) => {
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const controls = useAnimationControls()
+  const [constraints, setConstraints] = useState({
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  })
+  const velocityX = useVelocity(mouseX)
+  const velocityY = useVelocity(mouseY)
 
-  const handleDragStart = () => {
-    didDrag.current = false
-    setIsDragging(true)
+  const springConfig = {
+    stiffness: 100,
+    damping: 20,
+    mass: 0.5,
   }
 
-  const handleDrag = (_e: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) => {
-    if (Math.hypot(info.offset.x, info.offset.y) > dragThreshold) {
-      didDrag.current = true
+  const rotateX = useSpring(useTransform(mouseY, [-300, 300], [25, -25]), springConfig)
+  const rotateY = useSpring(useTransform(mouseX, [-300, 300], [-25, 25]), springConfig)
+
+  const opacity = useSpring(useTransform(mouseX, [-300, 0, 300], [0.8, 1, 0.8]), springConfig)
+
+  const glareOpacity = useSpring(
+    useTransform(mouseX, [-300, 0, 300], [0.2, 0, 0.2]),
+    springConfig,
+  )
+
+  useEffect(() => {
+    // Update constraints when component mounts or window resizes
+    const updateConstraints = () => {
+      if (typeof window !== "undefined") {
+        setConstraints({
+          top: -window.innerHeight / 2,
+          left: -window.innerWidth / 2,
+          right: window.innerWidth / 2,
+          bottom: window.innerHeight / 2,
+        })
+      }
     }
-  }
 
-  const handleDragEnd = () => {
-    setIsDragging(false)
-  }
+    updateConstraints()
 
-  // Capture phase runs before the child's own onClick — swallow the click that
-  // browsers synthesize at the end of a drag so the child doesn't react to it.
-  const handleClickCapture = (e: React.MouseEvent) => {
-    if (didDrag.current) {
-      e.preventDefault()
-      e.stopPropagation()
-      didDrag.current = false
+    window.addEventListener("resize", updateConstraints)
+
+    return () => {
+      window.removeEventListener("resize", updateConstraints)
     }
+  }, [])
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { clientX, clientY } = e
+    const { width, height, left, top } = cardRef.current?.getBoundingClientRect() ?? {
+      width: 0,
+      height: 0,
+      left: 0,
+      top: 0,
+    }
+    const centerX = left + width / 2
+    const centerY = top + height / 2
+    const deltaX = clientX - centerX
+    const deltaY = clientY - centerY
+    mouseX.set(deltaX)
+    mouseY.set(deltaY)
+  }
+
+  const handleMouseLeave = () => {
+    mouseX.set(0)
+    mouseY.set(0)
   }
 
   return (
     <motion.div
+      ref={cardRef}
       drag
-      dragConstraints={constraintsRef}
-      dragElastic={0.12}
-      dragMomentum
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
-      onClickCapture={handleClickCapture}
-      whileDrag={{ scale: 1.04, zIndex: 50 }}
-      animate={{
-        boxShadow: isDragging
-          ? "0 30px 60px -12px rgba(0,0,0,0.35)"
-          : "0 10px 30px -15px rgba(0,0,0,0.25)",
+      dragConstraints={constraints}
+      onDragStart={() => {
+        document.body.style.cursor = "grabbing"
       }}
-      transition={{ type: "spring", stiffness: 500, damping: 40 }}
-      className={`inline-block touch-none rounded-2xl ${isDragging ? "cursor-grabbing" : "cursor-grab"} ${className ?? ""}`}
-      style={{ willChange: "transform" }}
+      onDragEnd={(_event, info) => {
+        document.body.style.cursor = "default"
+
+        controls.start({
+          rotateX: 0,
+          rotateY: 0,
+          transition: {
+            type: "spring",
+            ...springConfig,
+          },
+        })
+        const currentVelocityX = velocityX.get()
+        const currentVelocityY = velocityY.get()
+
+        const velocityMagnitude = Math.sqrt(
+          currentVelocityX * currentVelocityX + currentVelocityY * currentVelocityY,
+        )
+        const bounce = Math.min(0.8, velocityMagnitude / 1000)
+
+        animate(info.point.x, info.point.x + currentVelocityX * 0.3, {
+          duration: 0.8,
+          ease: [0.2, 0, 0, 1],
+          bounce,
+          type: "spring",
+          stiffness: 50,
+          damping: 15,
+          mass: 0.8,
+        })
+      }}
+      style={{
+        rotateX,
+        rotateY,
+        opacity,
+        willChange: "transform",
+        transformStyle: "preserve-3d",
+      }}
+      animate={controls}
+      whileHover={{ scale: 1.02 }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={cn(
+        "relative min-h-96 w-80 overflow-hidden rounded-md bg-neutral-100 p-6 shadow-2xl dark:bg-neutral-900",
+        className,
+      )}
     >
       {children}
+      <motion.div
+        style={{
+          opacity: glareOpacity,
+        }}
+        className="pointer-events-none absolute inset-0 select-none bg-white"
+      />
     </motion.div>
   )
+}
+
+export const DraggableCardContainer = ({
+  className,
+  children,
+}: {
+  className?: string
+  children?: React.ReactNode
+}) => {
+  return <div className={cn("[perspective:3000px]", className)}>{children}</div>
 }

@@ -25,8 +25,9 @@ Other scripts: `npm run build` (type-check + production bundle),
 src/
   components/ui/
     expand-map.tsx      # LocationMap — the integrated component (verbatim)
-    draggable-card.tsx  # the moveable wrapper (framer-motion drag)
-  App.tsx               # demo: three draggable maps on a bounded canvas
+    draggable-card.tsx  # Aceternity Draggable Card (via 21st.dev)
+  lib/utils.ts          # cn() helper (clsx + tailwind-merge)
+  App.tsx               # demo: three draggable maps on a 3D-perspective canvas
   main.tsx              # React entry
   index.css             # Tailwind + shadcn CSS variables (light/dark tokens)
 components.json         # shadcn config (so `npx shadcn add` keeps working)
@@ -44,18 +45,35 @@ future `npx shadcn@latest add` calls all resolve without edits.
 
 ## The moveable interface
 
-`DraggableCard` wraps any child in a bounded drag surface built on
-[framer-motion](https://www.framer.com/motion/)'s `drag` primitive — the same
-foundation the [21st.dev draggable components](https://21st.dev/preetsuthar17/draggable-list)
-use, so no extra dependency was added. It provides:
+The draggable surface is **Aceternity UI's Draggable Card**, as published on
+21st.dev — `DraggableCardContainer` (sets the 3D perspective) + `DraggableCardBody`
+(the drag + tilt surface). Install it in a fresh project with:
 
-- **Bounded dragging** via `dragConstraints` (cards stay on the canvas) with
-  elastic edges and release momentum.
-- **Grab affordance** — lifts and scales while held, `cursor-grab` → `grabbing`.
-- **Drag-vs-click guard** — the child stays interactive. `LocationMap` expands
-  on click; a real drag is detected by pointer distance and its trailing
-  synthetic click is swallowed in the capture phase, so repositioning a card
-  never toggles its expanded state.
+```bash
+npx shadcn@latest add "https://21st.dev/r/aceternity/draggable-card"
+```
+
+The vendored copy in `src/components/ui/draggable-card.tsx` is the upstream
+component with two small, documented adaptations (called out in its header):
+
+1. Imports come from `framer-motion` (already a dependency) rather than the
+   newer `motion/react` package — identical re-exported hooks.
+2. 3D depth uses an inline `transformStyle: "preserve-3d"` instead of Tailwind
+   v4's `transform-3d` utility, since this project targets Tailwind v3.
+
+What it gives you:
+
+- **Velocity-based momentum** — release mid-fling and the card carries its speed.
+- **Spring 3D tilt** — the card rotates toward the cursor (`rotateX`/`rotateY`)
+  and springs flat on release; a moving glare sweeps across as you drag.
+- **Viewport-wide constraints** — cards can be dragged anywhere on screen, with
+  bounds recomputed on resize.
+
+In `App.tsx` the default card chrome (`bg`, padding, fixed `min-h-96 w-80`,
+shadow) is overridden so the body hugs the `LocationMap` instead of framing it,
+and `overflow-visible` keeps the map's "Click to expand" hint and its expand
+growth from being clipped. `LocationMap` stays fully interactive — click still
+toggles the expanded street-grid view.
 
 ### Props answered (integration guidelines)
 
