@@ -23,7 +23,7 @@ export function LocationMap({
 
   return (
     <motion.div
-      className={`relative cursor-pointer select-none ${className}`}
+      className={`relative cursor-pointer select-none ${className ?? ""}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}

@@ -4,21 +4,22 @@
 // Source: https://ui.aceternity.com/components/draggable-card (MIT)
 // Install (registry): npx shadcn@latest add "https://21st.dev/r/aceternity/draggable-card"
 //
-// Two adaptations for this project, nothing else changed:
+// Three adaptations for this project, nothing else changed:
 //   1. Imports come from `framer-motion` (already a dependency) instead of the
 //      newer `motion/react` package — the hooks are identical re-exports.
 //   2. 3D depth is set via an inline `transformStyle: "preserve-3d"` instead of
 //      Tailwind v4's `transform-3d` utility, since this project is on Tailwind v3.
+//   3. Dropped the upstream `onDragEnd` velocity/`animate()` block: it computed a
+//      value and animated it to nothing (no motion value, no onUpdate), so it was
+//      a no-op. Drag release inertia still comes from framer's own `dragMomentum`.
 
 import { cn } from "@/lib/utils"
 import React, { useRef, useState, useEffect } from "react"
 import {
-  animate,
   motion,
   useMotionValue,
   useSpring,
   useTransform,
-  useVelocity,
   useAnimationControls,
 } from "framer-motion"
 
@@ -39,9 +40,6 @@ export const DraggableCardBody = ({
     right: 0,
     bottom: 0,
   })
-  const velocityX = useVelocity(mouseX)
-  const velocityY = useVelocity(mouseY)
-
   const springConfig = {
     stiffness: 100,
     damping: 20,
@@ -109,9 +107,10 @@ export const DraggableCardBody = ({
       onDragStart={() => {
         document.body.style.cursor = "grabbing"
       }}
-      onDragEnd={(_event, info) => {
+      onDragEnd={() => {
         document.body.style.cursor = "default"
 
+        // Spring the tilt back to flat on release.
         controls.start({
           rotateX: 0,
           rotateY: 0,
@@ -119,23 +118,6 @@ export const DraggableCardBody = ({
             type: "spring",
             ...springConfig,
           },
-        })
-        const currentVelocityX = velocityX.get()
-        const currentVelocityY = velocityY.get()
-
-        const velocityMagnitude = Math.sqrt(
-          currentVelocityX * currentVelocityX + currentVelocityY * currentVelocityY,
-        )
-        const bounce = Math.min(0.8, velocityMagnitude / 1000)
-
-        animate(info.point.x, info.point.x + currentVelocityX * 0.3, {
-          duration: 0.8,
-          ease: [0.2, 0, 0, 1],
-          bounce,
-          type: "spring",
-          stiffness: 50,
-          damping: 15,
-          mass: 0.8,
         })
       }}
       style={{
@@ -159,7 +141,7 @@ export const DraggableCardBody = ({
         style={{
           opacity: glareOpacity,
         }}
-        className="pointer-events-none absolute inset-0 select-none bg-white"
+        className="pointer-events-none absolute inset-0 select-none rounded-[inherit] bg-white"
       />
     </motion.div>
   )
