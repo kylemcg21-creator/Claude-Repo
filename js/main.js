@@ -61,12 +61,25 @@
 
   // Only one FAQ item open at a time
   var faqItems = Array.prototype.slice.call(document.querySelectorAll('.faq-item'));
-  faqItems.forEach(function (item) {
+  var faqStorageKey = 'blockcraft-guide-faq-open';
+
+  // Restore previously opened FAQ item
+  var savedFaqIndex = localStorage.getItem(faqStorageKey);
+  if (savedFaqIndex !== null && faqItems[savedFaqIndex]) {
+    faqItems[savedFaqIndex].open = true;
+  }
+
+  faqItems.forEach(function (item, index) {
     item.addEventListener('toggle', function () {
       if (item.open) {
-        faqItems.forEach(function (other) {
-          if (other !== item) other.open = false;
+        faqItems.forEach(function (other, otherIndex) {
+          if (other !== item) {
+            other.open = false;
+          }
         });
+        localStorage.setItem(faqStorageKey, index);
+      } else {
+        localStorage.removeItem(faqStorageKey);
       }
     });
   });
