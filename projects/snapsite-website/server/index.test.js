@@ -125,4 +125,35 @@ describe("POST /api/draft-report", () => {
     assert.equal(res.status, 413);
     assert.equal(client.calls.length, 0);
   });
+
+  test("handles upstream API errors gracefully without throwing", async () => {
+    const client = createMockClient({ fail: true });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    assert.equal(res.status, 200);
+    assert.match(res.text, /event: error/);
+    assert.match(res.text, /Could not draft the report/);
+  });
+
+  test("sends done event even with empty text chunks", async () => {
+    const client = createMockClient({ chunks: ["", "", "content"] });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    assert.equal(res.status, 200);
+    assert.match(res.text, /event: done/);
+    assert.match(res.text, /"status":"needs_approval"/);
+  });
+
+  test("uses correct model in done event", async () => {
+    const client = createMockClient({ chunks: ["draft"] });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    assert.match(res.text, /"model":"claude-opus-4-8"/);
+  });
 });
