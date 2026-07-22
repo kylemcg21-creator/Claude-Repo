@@ -1,9 +1,7 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef } from "react"
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion"
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface LocationMapProps {
   location?: string
@@ -18,31 +16,6 @@ export function LocationMap({
 }: LocationMapProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const mouseX = useMotionValue(0)
-  const mouseY = useMotionValue(0)
-
-  const rotateX = useTransform(mouseY, [-50, 50], [8, -8])
-  const rotateY = useTransform(mouseX, [-50, 50], [-8, 8])
-
-  const springRotateX = useSpring(rotateX, { stiffness: 300, damping: 30 })
-  const springRotateY = useSpring(rotateY, { stiffness: 300, damping: 30 })
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
-    mouseX.set(e.clientX - centerX)
-    mouseY.set(e.clientY - centerY)
-  }
-
-  const handleMouseLeave = () => {
-    mouseX.set(0)
-    mouseY.set(0)
-    setIsHovered(false)
-  }
 
   const handleClick = () => {
     setIsExpanded(!isExpanded)
@@ -50,23 +23,13 @@ export function LocationMap({
 
   return (
     <motion.div
-      ref={containerRef}
       className={`relative cursor-pointer select-none ${className}`}
-      style={{
-        perspective: 1000,
-      }}
-      onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
     >
       <motion.div
         className="relative overflow-hidden rounded-2xl bg-background border border-border"
-        style={{
-          rotateX: springRotateX,
-          rotateY: springRotateY,
-          transformStyle: "preserve-3d",
-        }}
         animate={{
           width: isExpanded ? 360 : 240,
           height: isExpanded ? 280 : 140,
