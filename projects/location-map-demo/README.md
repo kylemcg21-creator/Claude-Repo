@@ -19,6 +19,22 @@ npm run dev      # http://localhost:5173
 Other scripts: `npm run build` (type-check + production bundle),
 `npm run preview` (serve the build).
 
+## Deploy (Vercel)
+
+This subproject ships its own `vercel.json` (Vite framework preset, `npm run
+build` → `dist`, with an SPA rewrite). It deploys as **its own Vercel project**,
+separate from the repo root — the root deploys the static "BlockCraft" site
+(`outputDirectory: "."`) and knows nothing about this Vite app.
+
+To connect it, create a new Vercel project from this Git repo and set:
+
+- **Root Directory:** `projects/location-map-demo`
+- Framework, build command, and output are read from the `vercel.json` here
+  (Vite / `npm run build` / `dist`).
+
+That Root Directory setting is the crucial part — it scopes the second project
+to this folder so the two deployments don't collide.
+
 ## What's inside
 
 ```
