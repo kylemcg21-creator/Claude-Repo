@@ -252,3 +252,314 @@ describe('Demo Form Validation', () => {
     expect(validation.location).toBe('');
   });
 });
+
+// ARIA attribute management for accessibility
+function createARIAManager() {
+  const attributes = new Map();
+
+  return {
+    setAttribute(element, attr, value) {
+      if (!attributes.has(element)) {
+        attributes.set(element, {});
+      }
+      attributes.get(element)[attr] = String(value);
+    },
+    getAttribute(element, attr) {
+      return attributes.get(element)?.[attr] || null;
+    },
+    updateForNavState(navToggleEl, isOpen) {
+      this.setAttribute(navToggleEl, 'aria-expanded', isOpen);
+      this.setAttribute(navToggleEl, 'aria-label', isOpen ? 'Close menu' : 'Open menu');
+    },
+  };
+}
+
+describe('ARIA Attribute Updates', () => {
+  it('should update aria-expanded when nav opens', () => {
+    const aria = createARIAManager();
+    const navToggle = { id: 'nav-toggle' };
+
+    aria.updateForNavState(navToggle, true);
+    expect(aria.getAttribute(navToggle, 'aria-expanded')).toBe('true');
+  });
+
+  it('should update aria-expanded when nav closes', () => {
+    const aria = createARIAManager();
+    const navToggle = { id: 'nav-toggle' };
+
+    aria.updateForNavState(navToggle, false);
+    expect(aria.getAttribute(navToggle, 'aria-expanded')).toBe('false');
+  });
+
+  it('should update aria-label to Close when open', () => {
+    const aria = createARIAManager();
+    const navToggle = { id: 'nav-toggle' };
+
+    aria.updateForNavState(navToggle, true);
+    expect(aria.getAttribute(navToggle, 'aria-label')).toBe('Close menu');
+  });
+
+  it('should update aria-label to Open when closed', () => {
+    const aria = createARIAManager();
+    const navToggle = { id: 'nav-toggle' };
+
+    aria.updateForNavState(navToggle, false);
+    expect(aria.getAttribute(navToggle, 'aria-label')).toBe('Open menu');
+  });
+
+  it('should maintain separate state for multiple elements', () => {
+    const aria = createARIAManager();
+    const toggle1 = { id: 'toggle-1' };
+    const toggle2 = { id: 'toggle-2' };
+
+    aria.updateForNavState(toggle1, true);
+    aria.updateForNavState(toggle2, false);
+
+    expect(aria.getAttribute(toggle1, 'aria-expanded')).toBe('true');
+    expect(aria.getAttribute(toggle2, 'aria-expanded')).toBe('false');
+  });
+});
+
+// Keyboard navigation and focus management
+function createFocusManager() {
+  const focusHistory = [];
+  const focusableElements = new Map();
+
+  return {
+    registerFocusable(id, element) {
+      focusableElements.set(id, element);
+    },
+    focus(id) {
+      const el = focusableElements.get(id);
+      if (el) {
+        focusHistory.push(id);
+        return true;
+      }
+      return false;
+    },
+    getFocusHistory() {
+      return [...focusHistory];
+    },
+    getLastFocused() {
+      return focusHistory[focusHistory.length - 1] || null;
+    },
+    clearFocusHistory() {
+      focusHistory.length = 0;
+    },
+    handleKeydown(keyCode, currentFocusId) {
+      // Arrow key navigation
+      const focusIds = Array.from(focusableElements.keys());
+      const currentIndex = focusIds.indexOf(currentFocusId);
+
+      if (keyCode === 'ArrowRight' || keyCode === 'ArrowDown') {
+        const nextId = focusIds[currentIndex + 1];
+        if (nextId) {
+          this.focus(nextId);
+          return nextId;
+        }
+      } else if (keyCode === 'ArrowLeft' || keyCode === 'ArrowUp') {
+        const prevId = focusIds[currentIndex - 1];
+        if (prevId) {
+          this.focus(prevId);
+          return prevId;
+        }
+      }
+
+      return null;
+    },
+  };
+}
+
+describe('Keyboard Navigation and Focus Management', () => {
+  it('should register focusable elements', () => {
+    const focus = createFocusManager();
+    const btn = { id: 'btn-1' };
+
+    focus.registerFocusable('btn-1', btn);
+    expect(focus.focus('btn-1')).toBe(true);
+  });
+
+  it('should track focus history', () => {
+    const focus = createFocusManager();
+    focus.registerFocusable('btn-1', {});
+    focus.registerFocusable('btn-2', {});
+
+    focus.focus('btn-1');
+    focus.focus('btn-2');
+
+    expect(focus.getFocusHistory()).toEqual(['btn-1', 'btn-2']);
+  });
+
+  it('should return null when focusing unregistered element', () => {
+    const focus = createFocusManager();
+    expect(focus.focus('non-existent')).toBe(false);
+  });
+
+  it('should navigate right with ArrowRight key', () => {
+    const focus = createFocusManager();
+    focus.registerFocusable('link-1', {});
+    focus.registerFocusable('link-2', {});
+    focus.registerFocusable('link-3', {});
+
+    focus.focus('link-1');
+    const next = focus.handleKeydown('ArrowRight', 'link-1');
+
+    expect(next).toBe('link-2');
+    expect(focus.getLastFocused()).toBe('link-2');
+  });
+
+  it('should navigate left with ArrowLeft key', () => {
+    const focus = createFocusManager();
+    focus.registerFocusable('link-1', {});
+    focus.registerFocusable('link-2', {});
+
+    focus.focus('link-2');
+    const prev = focus.handleKeydown('ArrowLeft', 'link-2');
+
+    expect(prev).toBe('link-1');
+  });
+
+  it('should not navigate beyond last element with ArrowRight', () => {
+    const focus = createFocusManager();
+    focus.registerFocusable('link-1', {});
+    focus.registerFocusable('link-2', {});
+
+    const result = focus.handleKeydown('ArrowRight', 'link-2');
+    expect(result).toBeNull();
+  });
+
+  it('should not navigate before first element with ArrowLeft', () => {
+    const focus = createFocusManager();
+    focus.registerFocusable('link-1', {});
+    focus.registerFocusable('link-2', {});
+
+    const result = focus.handleKeydown('ArrowLeft', 'link-1');
+    expect(result).toBeNull();
+  });
+
+  it('should clear focus history', () => {
+    const focus = createFocusManager();
+    focus.registerFocusable('btn-1', {});
+    focus.focus('btn-1');
+
+    expect(focus.getFocusHistory().length).toBe(1);
+    focus.clearFocusHistory();
+    expect(focus.getFocusHistory().length).toBe(0);
+  });
+});
+
+// localStorage quota and error handling
+function createStorageManager(maxSize = 5242880) {
+  // 5MB default limit
+  const store = new Map();
+  let currentSize = 0;
+
+  return {
+    setItem(key, value) {
+      const size = key.length + value.length;
+
+      if (currentSize + size > maxSize) {
+        throw new Error('QuotaExceededError');
+      }
+
+      if (store.has(key)) {
+        currentSize -= store.get(key).length;
+      }
+
+      store.set(key, value);
+      currentSize += size;
+
+      return true;
+    },
+    getItem(key) {
+      return store.get(key) || null;
+    },
+    removeItem(key) {
+      if (store.has(key)) {
+        currentSize -= store.get(key).length;
+        store.delete(key);
+      }
+    },
+    clear() {
+      store.clear();
+      currentSize = 0;
+    },
+    getCurrentSize() {
+      return currentSize;
+    },
+    getMaxSize() {
+      return maxSize;
+    },
+  };
+}
+
+describe('localStorage Quota and Error Handling', () => {
+  it('should store items within quota', () => {
+    const storage = createStorageManager(100);
+
+    expect(() => storage.setItem('key1', 'value1')).not.toThrow();
+    expect(storage.getItem('key1')).toBe('value1');
+  });
+
+  it('should throw QuotaExceededError when exceeding limit', () => {
+    const storage = createStorageManager(10);
+
+    expect(() => storage.setItem('key', 'value that is very long')).toThrow(
+      'QuotaExceededError'
+    );
+  });
+
+  it('should track current size usage', () => {
+    const storage = createStorageManager(1000);
+
+    storage.setItem('key1', 'hello');
+    expect(storage.getCurrentSize()).toBe('key1'.length + 'hello'.length);
+  });
+
+  it('should update size when replacing values', () => {
+    const storage = createStorageManager(1000);
+
+    storage.setItem('key', 'short');
+    const sizeAfterShort = storage.getCurrentSize();
+
+    storage.setItem('key', 'a much longer value');
+    const sizeAfterLong = storage.getCurrentSize();
+
+    expect(sizeAfterLong).toBeGreaterThan(sizeAfterShort);
+  });
+
+  it('should reduce size when removing items', () => {
+    const storage = createStorageManager(1000);
+
+    storage.setItem('key', 'value');
+    const sizeWithItem = storage.getCurrentSize();
+
+    storage.removeItem('key');
+    expect(storage.getCurrentSize()).toBeLessThan(sizeWithItem);
+  });
+
+  it('should clear all items and reset size', () => {
+    const storage = createStorageManager(1000);
+
+    storage.setItem('key1', 'value1');
+    storage.setItem('key2', 'value2');
+
+    storage.clear();
+
+    expect(storage.getCurrentSize()).toBe(0);
+    expect(storage.getItem('key1')).toBeNull();
+  });
+
+  it('should allow storing items after clearing quota error', () => {
+    const storage = createStorageManager(30);
+
+    storage.setItem('key1', 'value1');
+
+    expect(() => storage.setItem('key2', 'very long value that exceeds limit')).toThrow(
+      'QuotaExceededError'
+    );
+
+    storage.removeItem('key1');
+    expect(() => storage.setItem('key2', 'short')).not.toThrow();
+  });
+});

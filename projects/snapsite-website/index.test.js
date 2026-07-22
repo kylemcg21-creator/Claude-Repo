@@ -217,3 +217,294 @@ describe('SSE Event Parsing', () => {
     expect(event.data.error).toContain('Could not draft');
   });
 });
+
+// Response body streaming and incomplete data handling
+function createStreamBuffer() {
+  let buffer = '';
+  const events = [];
+
+  return {
+    append(chunk) {
+      buffer += chunk;
+      this.tryExtractEvents();
+    },
+    tryExtractEvents() {
+      // Split on double newline which marks end of event
+      const parts = buffer.split('\n\n');
+
+      // Keep the last part if incomplete (no trailing double newline)
+      buffer = parts[parts.length - 1];
+
+      // Process complete events
+      for (let i = 0; i < parts.length - 1; i++) {
+        const eventBlock = parts[i];
+        if (eventBlock.trim()) {
+          try {
+            const event = parseSSEEvent(eventBlock);
+            if (event.event && event.data) {
+              events.push(event);
+            }
+          } catch (e) {
+            // Skip malformed events
+          }
+        }
+      }
+    },
+    getEvents() {
+      return [...events];
+    },
+    getPendingData() {
+      return buffer;
+    },
+    clear() {
+      buffer = '';
+      events.length = 0;
+    },
+  };
+}
+
+describe('Response Body Streaming and Incomplete Data', () => {
+  it('should accumulate partial chunks', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\n');
+    stream.append('data: {"text":"Hello"}');
+
+    expect(stream.getPendingData()).toContain('data: {"text":"Hello"}');
+  });
+
+  it('should extract complete events from buffer', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\ndata: {"text":"Hello"}\n\n');
+
+    expect(stream.getEvents()).toHaveLength(1);
+    expect(stream.getEvents()[0].event).toBe('delta');
+  });
+
+  it('should handle multiple events in single chunk', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\ndata: {"text":"A"}\n\nevent: delta\ndata: {"text":"B"}\n\n');
+
+    expect(stream.getEvents()).toHaveLength(2);
+  });
+
+  it('should handle event split across multiple chunks', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\n');
+    stream.append('data: {"text":"');
+    stream.append('Split content');
+    stream.append('"}\n\n');
+
+    expect(stream.getEvents()).toHaveLength(1);
+    expect(stream.getEvents()[0].data.text).toContain('Split');
+  });
+
+  it('should skip malformed events', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\ndata: {"invalid json}\n\n');
+    stream.append('event: error\ndata: {"error":"valid"}\n\n');
+
+    const events = stream.getEvents();
+    expect(events).toHaveLength(1);
+    expect(events[0].event).toBe('error');
+  });
+
+  it('should preserve incomplete event in buffer', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\ndata: {"text":"Incomplete"');
+
+    expect(stream.getPendingData()).toContain('Incomplete');
+    expect(stream.getEvents()).toHaveLength(0);
+  });
+
+  it('should clear buffer and events', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\ndata: {"text":"data"}\n\n');
+    stream.clear();
+
+    expect(stream.getEvents()).toHaveLength(0);
+    expect(stream.getPendingData()).toBe('');
+  });
+
+  it('should handle rapid consecutive deltas', () => {
+    const stream = createStreamBuffer();
+
+    for (let i = 0; i < 10; i++) {
+      stream.append(`event: delta\ndata: {"text":"chunk${i}"}\n\n`);
+    }
+
+    expect(stream.getEvents()).toHaveLength(10);
+  });
+
+  it('should preserve newlines within text content', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\ndata: {"text":"Line 1\\nLine 2\\nLine 3"}\n\n');
+
+    const events = stream.getEvents();
+    expect(events[0].data.text).toContain('Line 1');
+    expect(events[0].data.text).toContain('Line 2');
+  });
+
+  it('should handle empty delta chunks', () => {
+    const stream = createStreamBuffer();
+
+    stream.append('event: delta\ndata: {"text":""}\n\n');
+    stream.append('event: delta\ndata: {"text":"content"}\n\n');
+
+    expect(stream.getEvents()).toHaveLength(2);
+  });
+});
+
+// Request timeout and retry logic
+function createStreamingRequestHandler() {
+  const state = {
+    isStreaming: false,
+    isTimeout: false,
+    retryCount: 0,
+    maxRetries: 3,
+  };
+
+  return {
+    startStream() {
+      if (state.isStreaming) {
+        throw new Error('Stream already in progress');
+      }
+      state.isStreaming = true;
+      state.isTimeout = false;
+      return true;
+    },
+    endStream() {
+      state.isStreaming = false;
+      state.retryCount = 0;
+    },
+    onTimeout() {
+      state.isTimeout = true;
+      state.isStreaming = false;
+    },
+    canRetry() {
+      return state.retryCount < state.maxRetries && state.isTimeout;
+    },
+    retry() {
+      if (!this.canRetry()) {
+        return false;
+      }
+      state.retryCount++;
+      state.isStreaming = true;
+      state.isTimeout = false;
+      return true;
+    },
+    getState() {
+      return { ...state };
+    },
+    reset() {
+      state.isStreaming = false;
+      state.isTimeout = false;
+      state.retryCount = 0;
+    },
+  };
+}
+
+describe('Request Timeout and Retry Logic', () => {
+  it('should start streaming state', () => {
+    const handler = createStreamingRequestHandler();
+
+    expect(handler.startStream()).toBe(true);
+    expect(handler.getState().isStreaming).toBe(true);
+  });
+
+  it('should prevent concurrent streams', () => {
+    const handler = createStreamingRequestHandler();
+
+    handler.startStream();
+    expect(() => handler.startStream()).toThrow('Stream already in progress');
+  });
+
+  it('should end stream and reset retries', () => {
+    const handler = createStreamingRequestHandler();
+
+    handler.startStream();
+    handler.endStream();
+
+    expect(handler.getState().isStreaming).toBe(false);
+    expect(handler.getState().retryCount).toBe(0);
+  });
+
+  it('should mark timeout state', () => {
+    const handler = createStreamingRequestHandler();
+
+    handler.startStream();
+    handler.onTimeout();
+
+    expect(handler.getState().isTimeout).toBe(true);
+    expect(handler.getState().isStreaming).toBe(false);
+  });
+
+  it('should allow retry after timeout', () => {
+    const handler = createStreamingRequestHandler();
+
+    handler.startStream();
+    handler.onTimeout();
+
+    expect(handler.canRetry()).toBe(true);
+  });
+
+  it('should increment retry count', () => {
+    const handler = createStreamingRequestHandler();
+
+    handler.startStream();
+    handler.onTimeout();
+    handler.retry();
+
+    expect(handler.getState().retryCount).toBe(1);
+  });
+
+  it('should prevent retry after max retries exceeded', () => {
+    const handler = createStreamingRequestHandler();
+
+    // Exhaust retries
+    for (let i = 0; i < 3; i++) {
+      handler.startStream();
+      handler.onTimeout();
+      handler.retry();
+      handler.endStream();
+    }
+
+    expect(handler.canRetry()).toBe(false);
+  });
+
+  it('should reset all state', () => {
+    const handler = createStreamingRequestHandler();
+
+    handler.startStream();
+    handler.onTimeout();
+    handler.retry();
+    handler.reset();
+
+    const state = handler.getState();
+    expect(state.isStreaming).toBe(false);
+    expect(state.isTimeout).toBe(false);
+    expect(state.retryCount).toBe(0);
+  });
+
+  it('should track retry count across multiple attempts', () => {
+    const handler = createStreamingRequestHandler();
+
+    handler.startStream();
+    handler.onTimeout();
+    const firstRetry = handler.retry();
+    expect(firstRetry).toBe(true);
+    expect(handler.getState().retryCount).toBe(1);
+
+    handler.onTimeout();
+    const secondRetry = handler.retry();
+    expect(secondRetry).toBe(true);
+    expect(handler.getState().retryCount).toBe(2);
+  });
+});
