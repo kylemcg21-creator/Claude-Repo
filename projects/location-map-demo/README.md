@@ -54,16 +54,19 @@ npx shadcn@latest add "https://21st.dev/r/aceternity/draggable-card"
 ```
 
 The vendored copy in `src/components/ui/draggable-card.tsx` is the upstream
-component with two small, documented adaptations (called out in its header):
+component with three small, documented adaptations (called out in its header):
 
 1. Imports come from `framer-motion` (already a dependency) rather than the
    newer `motion/react` package — identical re-exported hooks.
 2. 3D depth uses an inline `transformStyle: "preserve-3d"` instead of Tailwind
    v4's `transform-3d` utility, since this project targets Tailwind v3.
+3. Dropped the upstream `onDragEnd` velocity/`animate()` block, which computed a
+   value and animated it to nothing (a no-op); release inertia still comes from
+   framer's own `dragMomentum`.
 
 What it gives you:
 
-- **Velocity-based momentum** — release mid-fling and the card carries its speed.
+- **Release inertia** — let go mid-fling and framer's `dragMomentum` carries it.
 - **Spring 3D tilt** — the card rotates toward the cursor (`rotateX`/`rotateY`)
   and springs flat on release; a moving glare sweeps across as you drag.
 - **Viewport-wide constraints** — cards can be dragged anywhere on screen, with
