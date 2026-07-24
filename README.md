@@ -68,6 +68,33 @@ const response = await client.chat.completions.create({
 
 For detailed documentation, see [NeuroLink GitHub](https://github.com/juspay/neurolink).
 
+### Graphify
+
+[**Graphify**](https://github.com/Graphify-Labs/graphify) is an AI coding
+assistant skill that turns a folder of code, docs, papers, images, or videos
+into a queryable knowledge graph instead of grepping through files.
+
+**Installation:**
+
+```sh
+uv tool install graphifyy      # install the CLI (or: pipx install graphifyy)
+graphify install               # register the skill with your AI assistant
+```
+
+Then, in your assistant:
+
+```
+/graphify .
+```
+
+**Features:**
+- **Local code parsing**: tree-sitter AST, no LLM calls, nothing leaves your machine
+- **Labeled edges**: every connection is tagged `EXTRACTED` (explicit in source) or `INFERRED`
+- **Not a vector index**: a real, traversable graph — `graph.html`, `GRAPH_REPORT.md`, `graph.json`
+- **20+ assistant integrations**: Claude Code, Codex, Cursor, Aider, Gemini CLI, and more
+
+See [GRAPHIFY_INSTALLATION.md](GRAPHIFY_INSTALLATION.md) for the full guide.
+
 ## Skills
 
 - `nano-banana` (`.claude/skills/nano-banana/`) — generate and edit images with Google's Nano Banana models (`gemini-2.5-flash-image` / `gemini-3-pro-image-preview`). Text-to-image and image-to-image with curated transformation presets (anime-to-life, photo-restoration, imax-portrait, real-mecha, character-reference-sheet, j-idol, j-cover, figure-to-life) plus a J-Poses library. Presets ported from [ShinChven/nano-banana-skills](https://github.com/ShinChven/nano-banana-skills).
