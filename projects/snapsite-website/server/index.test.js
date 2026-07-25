@@ -125,4 +125,178 @@ describe("POST /api/draft-report", () => {
     assert.equal(res.status, 413);
     assert.equal(client.calls.length, 0);
   });
+
+  test("handles upstream API errors gracefully without throwing", async () => {
+    const client = createMockClient({ fail: true });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    assert.equal(res.status, 200);
+    assert.match(res.text, /event: error/);
+    assert.match(res.text, /Could not draft the report/);
+  });
+
+  test("sends done event even with empty text chunks", async () => {
+    const client = createMockClient({ chunks: ["", "", "content"] });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    assert.equal(res.status, 200);
+    assert.match(res.text, /event: done/);
+    assert.match(res.text, /"status":"needs_approval"/);
+  });
+
+  test("uses correct model in done event", async () => {
+    const client = createMockClient({ chunks: ["draft"] });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    assert.match(res.text, /"model":"claude-opus-4-8"/);
+  });
+
+  test("handles non-string note values by converting to string", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: 12345 });
+
+    assert.equal(res.status, 200);
+    assert.equal(client.calls[0].messages[0].content, "Field notes:\n12345");
+  });
+
+  test("handles non-string location values by converting to string", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test", location: 999 });
+
+    assert.equal(res.status, 200);
+    assert.match(res.text, /event: delta/);
+  });
+
+  test("streams all text chunks sequentially", async () => {
+    const chunks = ["One ", "Two ", "Three"];
+    const client = createMockClient({ chunks });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    const text = res.text;
+    assert.match(text, /One/);
+    assert.match(text, /Two/);
+    assert.match(text, /Three/);
+    // Verify order by checking indices
+    assert(text.indexOf("One") < text.indexOf("Two"));
+    assert(text.indexOf("Two") < text.indexOf("Three"));
+  });
+
+  test("sends delta events with partial content", async () => {
+    const client = createMockClient({ chunks: ["# ", "Header"] });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    const events = res.text
+      .trim()
+      .split("\n\n")
+      .filter((b) => b.trim());
+
+    const deltas = events
+      .map((block) => {
+        const [eventLine] = block.split("\n");
+        return eventLine.replace("event: ", "");
+      })
+      .filter((e) => e === "delta");
+
+    assert.equal(deltas.length, 2);
+  });
+
+  test("does not send done event before stream completes", async () => {
+    const client = createMockClient({ chunks: ["content"] });
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    const lines = res.text.trim().split("\n\n");
+    const lastEvent = lines[lines.length - 1];
+
+    assert.match(lastEvent, /event: done/);
+  });
+
+  test("uses system prompt in stream request", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    const systemPrompt = client.calls[0].system;
+    assert(systemPrompt.includes("SnapSite"));
+    assert(systemPrompt.includes("report-drafting"));
+    assert(systemPrompt.includes("DRAFT"));
+  });
+
+  test("sets thinking mode to adaptive", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    assert.deepEqual(client.calls[0].thinking, { type: "adaptive" });
+  });
+
+  test("sets max tokens to 2048", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    await request(app).post("/api/draft-report").send({ notes: "test" });
+
+    assert.equal(client.calls[0].max_tokens, 2048);
+  });
+
+  test("rejects requests with null notes", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: null });
+
+    assert.equal(res.status, 400);
+    assert.equal(client.calls.length, 0);
+  });
+
+  test("rejects requests with undefined notes", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    const res = await request(app).post("/api/draft-report").send({});
+
+    assert.equal(res.status, 400);
+    assert.equal(client.calls.length, 0);
+  });
+
+  test("allows location to be null or undefined", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    const res = await request(app)
+      .post("/api/draft-report")
+      .send({ notes: "test", location: null });
+
+    assert.equal(res.status, 200);
+    // Verify the request was made and check the user content doesn't have "Project location: "
+    assert.equal(client.calls[0].messages[0].content, "Field notes:\ntest");
+  });
+
+  test("handles special characters in notes", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+
+    const notes = 'Rust <img src=x> on "bracket" & other parts';
+    await request(app).post("/api/draft-report").send({ notes });
+
+    const userContent = client.calls[0].messages[0].content;
+    assert(userContent.includes(notes));
+  });
 });
