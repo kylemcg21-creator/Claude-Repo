@@ -1,0 +1,5 @@
+{
+  "name": "connect-apps-plugin",
+  "description": "Slash commands for managing Claude's app connectors (Slack, Notion, Linear, Gmail, and more): list what's connected, find new ones, and troubleshoot connection issues.",
+  "version": "0.1.0"
+}
