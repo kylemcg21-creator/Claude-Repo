@@ -1,0 +1,22 @@
+{
+  "name": "connect-apps-plugin",
+  "description": "Slash commands for managing Claude's app connectors (Slack, Notion, Linear, Gmail, and more): list what's connected, find new ones, and troubleshoot connection issues.",
+  "version": "0.1.0",
+  "commands": [
+    {
+      "name": "connectors-list",
+      "description": "List the user's app connectors and their connection status.",
+      "file": "connectors-list.md"
+    },
+    {
+      "name": "connectors-find",
+      "description": "Search the MCP connector registry for an app or task.",
+      "file": "connectors-find.md"
+    },
+    {
+      "name": "connectors-troubleshoot",
+      "description": "Diagnose why a specific connector isn't working.",
+      "file": "connectors-troubleshoot.md"
+    }
+  ]
+}
