@@ -85,6 +85,12 @@
       "skillPath": "skills/minimalist-skill/SKILL.md",
       "computedHash": "08873a3131d3be27bef9bf3304b310b16b44ca6e3561aebe532797be3443f6bd"
     },
+    "nano-banana-pro-prompts-recommend-skill": {
+      "source": "YouMind-OpenLab/nano-banana-pro-prompts-recommend-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "2026885be26dbe74df38aae307fed3759f000283882f27aa060538fb7e345c58"
+    },
     "redesign-existing-projects": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
