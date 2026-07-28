@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fluxio — Automate the Work Between Your Tools</title>
+<style>
+:root {
+  --bg:#F4F6FB; --bg-card:#FFFFFF; --bg-raised:#EAECF4;
+  --fg:#0F1F35; --fg-2:#3D4F6B; --fg-3:#6B7A99;
+  --accent:#4F6EF7; --accent-lo:#E8ECFF;
+  --cta:#00C67A; --cta-dark:#009A5E;
+  --border:rgba(15,31,53,.10);
+  --shadow:0 2px 12px rgba(15,31,53,.07);
+  --shadow-md:0 8px 32px rgba(15,31,53,.12);
+  --hero:#0F1F35; --hero-fg:#EEF2FF; --hero-muted:#8B9BB8;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0A1220; --bg-card:#111927; --bg-raised:#192338;
+  --fg:#EEF2FF; --fg-2:#B8C4DC; --fg-3:#8B9BBC;
+  --accent:#6B84F9; --accent-lo:#1A2347;
+  --cta:#00D688; --cta-dark:#00B872;
+  --border:rgba(238,242,255,.08);
+  --shadow:0 2px 12px rgba(0,0,0,.3);
+  --shadow-md:0 8px 40px rgba(0,0,0,.45);
+  --hero:#060E1A; --hero-fg:#EEF2FF; --hero-muted:#6B7A99;
+}}
+:root[data-theme=light]{
+  --bg:#F4F6FB; --bg-card:#FFFFFF; --bg-raised:#EAECF4;
+  --fg:#0F1F35; --fg-2:#3D4F6B; --fg-3:#6B7A99;
+  --accent:#4F6EF7; --accent-lo:#E8ECFF;
+  --cta:#00C67A; --cta-dark:#009A5E;
+  --border:rgba(15,31,53,.10);
+  --shadow:0 2px 12px rgba(15,31,53,.07);
+  --shadow-md:0 8px 32px rgba(15,31,53,.12);
+  --hero:#0F1F35; --hero-fg:#EEF2FF; --hero-muted:#8B9BB8;
+}
+:root[data-theme=dark]{
+  --bg:#0A1220; --bg-card:#111927; --bg-raised:#192338;
+  --fg:#EEF2FF; --fg-2:#B8C4DC; --fg-3:#8B9BBC;
+  --accent:#6B84F9; --accent-lo:#1A2347;
+  --cta:#00D688; --cta-dark:#00B872;
+  --border:rgba(238,242,255,.08);
+  --shadow:0 2px 12px rgba(0,0,0,.3);
+  --shadow-md:0 8px 40px rgba(0,0,0,.45);
+  --hero:#060E1A; --hero-fg:#EEF2FF; --hero-muted:#6B7A99;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,'Segoe UI','Helvetica Neue',sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;gap:24px}
+.wordmark{font-size:20px;font-weight:800;letter-spacing:-.03em;flex-shrink:0}
+.wordmark em{font-style:normal;color:var(--accent)}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{font-size:14px;font-weight:500;color:var(--fg-2);transition:color .15s}
+.nav-links a:hover{color:var(--fg)}
+.nav-actions{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;border:none;white-space:nowrap;font-family:inherit;line-height:1}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.btn-ghost{background:transparent;color:var(--fg-2)}
+.btn-ghost:hover{background:var(--bg-raised);color:var(--fg)}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-accent:hover{opacity:.9;transform:translateY(-1px)}
+.btn-cta{background:var(--cta);color:#0a1a0f;font-weight:700}
+.btn-cta:hover{background:var(--cta-dark);transform:translateY(-1px)}
+.btn-outline-light{background:transparent;color:var(--hero-fg);border:1px solid rgba(238,242,255,.2)}
+.btn-outline-light:hover{background:rgba(238,242,255,.07)}
+.btn-outline{background:transparent;color:var(--fg);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--bg-raised)}
+.btn-lg{padding:14px 28px;font-size:15px;border-radius:10px}
+.btn-full{width:100%}
+.hero{background:var(--hero);color:var(--hero-fg);padding:80px 0 0;overflow:hidden;position:relative}
+.hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.055) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:end;position:relative}
+.hero-content{padding-bottom:80px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(79,110,247,.15);border:1px solid rgba(79,110,247,.3);color:#A8B8FF;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:6px 14px;border-radius:100px;margin-bottom:28px}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#A8B8FF;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+.hero h1{font-size:clamp(38px,5.2vw,66px);font-weight:800;line-height:1.06;letter-spacing:-.035em;text-wrap:balance;margin-bottom:22px}
+.grad{background:linear-gradient(130deg,#7B94FB 0%,#00D688 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:17px;line-height:1.65;color:var(--hero-muted);max-width:460px;margin-bottom:36px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.hero-note{margin-top:18px;font-size:12px;color:var(--hero-muted);opacity:.65}
+.hero-visual{align-self:end;position:relative}
+.product-window{background:#111B2E;border:1px solid rgba(255,255,255,.08);border-radius:12px 12px 0 0;overflow:hidden;box-shadow:0 -24px 64px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04);transform:perspective(1100px) rotateX(3.5deg);transform-origin:bottom center}
+.titlebar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:#0D1626;border-bottom:1px solid rgba(255,255,255,.06)}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.r{background:#FF5F57}.dot.y{background:#FEBC2E}.dot.g{background:#28C840}
+.tbar-title{margin-left:6px;font-size:12px;color:rgba(255,255,255,.28);font-weight:500}
+.window-body{display:grid;grid-template-columns:196px 1fr}
+.w-sidebar{border-right:1px solid rgba(255,255,255,.06);padding:14px 10px;display:flex;flex-direction:column;gap:3px}
+.sb-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:4px 8px;margin-top:10px;margin-bottom:1px}
+.sb-label:first-child{margin-top:0}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:12px;color:rgba(255,255,255,.38);cursor:default}
+.sb-item.on{background:rgba(79,110,247,.18);color:#A8B8FF}
+.flow-area{padding:20px}
+.flow-nodes{display:flex;flex-direction:column;gap:0}
+.f-node{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:10px 12px;font-size:12px;color:rgba(255,255,255,.65)}
+.f-node.on{border-color:rgba(79,110,247,.45);background:rgba(79,110,247,.08)}
+.f-node.done{border-color:rgba(0,214,136,.35);background:rgba(0,214,136,.05)}
+.f-connector{width:1px;height:10px;background:linear-gradient(to bottom,rgba(79,110,247,.4),rgba(0,214,136,.25));margin-left:24px}
+.n-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.n-icon.blue{background:rgba(79,110,247,.22)}.n-icon.green{background:rgba(0,214,136,.15)}.n-icon.orange{background:rgba(251,146,60,.18)}.n-icon.purple{background:rgba(167,139,250,.18)}
+.n-info{flex:1;min-width:0}
+.n-name{font-weight:600;color:rgba(255,255,255,.82);font-size:12px;margin-bottom:1px}
+.n-desc{font-size:11px;color:rgba(255,255,255,.3)}
+.n-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.n-tag.done{background:rgba(0,214,136,.14);color:#00D688}
+.n-tag.run{background:rgba(79,110,247,.14);color:#A8B8FF}
+.n-tag.wait{background:rgba(255,255,255,.06);color:rgba(255,255,255,.28)}
+.logos-bar{padding:36px 0;border-bottom:1px solid var(--border)}
+.logos-inner{display:flex;align-items:center;gap:40px;flex-wrap:wrap}
+.logos-label{font-size:13px;color:var(--fg-3);font-weight:500;white-space:nowrap;flex-shrink:0}
+.logos-list{display:flex;align-items:center;gap:36px;flex-wrap:wrap}
+.logo-name{font-size:15px;font-weight:700;letter-spacing:-.02em;color:var(--fg-3);opacity:.45;transition:opacity .15s;cursor:default}
+.logo-name:hover{opacity:.75}
+.section{padding:96px 0}
+.section.alt{background:var(--bg-raised)}
+.s-eye{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.s-h{font-size:clamp(26px,3.2vw,42px);font-weight:800;letter-spacing:-.025em;line-height:1.1;text-wrap:balance;max-width:580px;margin-bottom:14px}
+.s-sub{font-size:16px;line-height:1.7;color:var(--fg-2);max-width:520px;margin-bottom:56px}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.b-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
+.b-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.b-card:nth-child(1){grid-column:span 7}
+.b-card:nth-child(2){grid-column:span 5}
+.b-card:nth-child(3){grid-column:span 4}
+.b-card:nth-child(4){grid-column:span 8}
+.b-icon{width:42px;height:42px;border-radius:10px;background:var(--accent-lo);display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:18px}
+.b-title{font-size:17px;font-weight:700;letter-spacing:-.02em;margin-bottom:7px}
+.b-desc{font-size:14px;line-height:1.65;color:var(--fg-2)}
+.mini-flow{margin-top:22px;display:flex;flex-direction:column;gap:7px}
+.m-node{display:flex;align-items:center;gap:9px;padding:8px 12px;background:var(--bg-raised);border-radius:8px;border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--fg-2)}
+.m-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.m-dot.b{background:var(--accent)}.m-dot.g{background:var(--cta)}.m-dot.o{background:#F59E0B}
+.int-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:18px}
+.int-chip{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:500;color:var(--fg-2)}
+.int-dot{width:18px;height:18px;border-radius:4px;flex-shrink:0}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:56px}
+.p-card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:36px;position:relative;transition:box-shadow .2s,transform .2s}
+.p-card:hover{box-shadow:var(--shadow-md);transform:translateY(-3px)}
+.p-card.pop{border-color:var(--accent);border-width:2px}
+.pop-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 14px;border-radius:100px;white-space:nowrap}
+.p-tier{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);margin-bottom:12px}
+.p-price{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1;margin-bottom:4px}
+.p-price sup{font-size:18px;font-weight:500;color:var(--fg-3);vertical-align:top;margin-top:9px;display:inline-block}
+.p-period{font-size:13px;color:var(--fg-3);margin-bottom:22px}
+.p-desc{font-size:14px;line-height:1.6;color:var(--fg-2);margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.p-feats{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:32px}
+.p-feat{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--fg-2)}
+.check{width:17px;height:17px;border-radius:50%;background:var(--cta);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#0a1a0f}
+.cta-sec{background:var(--hero);color:var(--hero-fg);padding:100px 0;position:relative;overflow:hidden}
+.cta-sec::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.045) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.cta-inner{text-align:center;position:relative}
+.cta-inner h2{font-size:clamp(30px,4vw,52px);font-weight:800;letter-spacing:-.03em;line-height:1.1;text-wrap:balance;margin-bottom:14px}
+.cta-inner p{font-size:17px;color:var(--hero-muted);max-width:460px;margin:0 auto 36px;line-height:1.65}
+.cta-form{display:flex;gap:10px;max-width:420px;margin:0 auto}
+.cta-input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:13px 16px;font-size:15px;color:var(--hero-fg);font-family:inherit;outline:none;transition:border-color .15s}
+.cta-input::placeholder{color:var(--hero-muted);opacity:.7}
+.cta-input:focus{border-color:var(--accent)}
+footer{background:var(--bg-card);border-top:1px solid var(--border);padding:44px 0}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.footer-logo{font-size:18px;font-weight:800;letter-spacing:-.03em}
+.footer-links{display:flex;gap:24px;list-style:none}
+.footer-links a{font-size:13px;color:var(--fg-3);transition:color .15s}
+.footer-links a:hover{color:var(--fg)}
+.footer-copy{font-size:13px;color:var(--fg-3)}
+@media(prefers-reduced-motion:no-preference){
+  .fade-up{opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s ease}
+  .fade-up.in{opacity:1;transform:none}
+  .fade-up.d1{transition-delay:.08s}
+  .fade-up.d2{transition-delay:.16s}
+}
+@media(max-width:960px){
+  .hero-inner{grid-template-columns:1fr}
+  .hero-visual{display:none}
+  .hero-content{padding-bottom:56px}
+  .b-card:nth-child(1),.b-card:nth-child(2),.b-card:nth-child(3),.b-card:nth-child(4){grid-column:span 12}
+  .pricing-grid{grid-template-columns:1fr;max-width:380px;margin-left:auto;margin-right:auto}
+  .nav-links{display:none}
+  .logos-inner{gap:18px}
+  .logos-list{gap:18px}
+  .footer-inner{flex-direction:column;text-align:center}
+}
+@media(max-width:600px){
+  .hero-btns,.cta-form{flex-direction:column}
+  .btn-lg{width:100%}
+  .int-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="nav-inner">
+      <a href="#" class="wordmark">Flux<em>io</em></a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#">Docs</a></li>
+        <li><a href="#">Blog</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="#" class="btn btn-ghost">Sign in</a>
+        <a href="#" class="btn btn-accent">Start free</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="eyebrow"><span class="eyebrow-dot"></span>Workflow Automation</div>
+        <h1>Automate the work <span class="grad">between</span> your tools</h1>
+        <p class="hero-sub">Fluxio connects your team's apps and automates the handoffs between them — so work moves without the bottleneck of manual updates.</p>
+        <div class="hero-btns">
+          <a href="#" class="btn btn-cta btn-lg">Get started free</a>
+          <a href="#" class="btn btn-outline-light btn-lg">See how it works</a>
+        </div>
+        <p class="hero-note">No credit card required &middot; Free up to 1,000 runs / month</p>
+      </div>
+      <div class="hero-visual">
+        <div class="product-window">
+          <div class="titlebar">
+            <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+            <span class="tbar-title">Fluxio — New customer onboarding</span>
+          </div>
+          <div class="window-body">
+            <div class="w-sidebar">
+              <div class="sb-label">Workflows</div>
+              <div class="sb-item on">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                New customer
+              </div>
+              <div class="sb-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Email sequences
+              </div>
+              <div class="sb-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Team alerts
+              </div>
+              <div class="sb-label">Logs</div>
+              <div class="sb-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Run history
+              </div>
+            </div>
+            <div class="flow-area">
+              <div class="flow-nodes">
+                <div class="f-node done">
+                  <div class="n-icon blue"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A8B8FF" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 15a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 4.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 11a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.5 18.4z"/></svg></div>
+                  <div class="n-info"><div class="n-name">Trigger: Form submitted</div><div class="n-desc">Typeform — Contact sales</div></div>
+                  <span class="n-tag done">Done</span>
+                </div>
+                <div class="f-connector"></div>
+                <div class="f-node done">
+                  <div class="n-icon green"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00D688" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+                  <div class="n-info"><div class="n-name">Create CRM contact</div><div class="n-desc">HubSpot — New contact</div></div>
+                  <span class="n-tag done">Done</span>
+                </div>
+                <div class="f-connector"></div>
+                <div class="f-node on">
+                  <div class="n-icon orange"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FB923C" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                  <div class="n-info"><div class="n-name">Send welcome email</div><div class="n-desc">Mailchimp — Onboarding</div></div>
+                  <span class="n-tag run">Running</span>
+                </div>
+                <div class="f-connector"></div>
+                <div class="f-node">
+                  <div class="n-icon purple"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+                  <div class="n-info"><div class="n-name">Notify sales rep</div><div class="n-desc">Slack — #new-leads</div></div>
+                  <span class="n-tag wait">Waiting</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="logos-bar">
+  <div class="wrap">
+    <div class="logos-inner">
+      <span class="logos-label">Trusted by teams at</span>
+      <div class="logos-list">
+        <span class="logo-name">Vercel</span>
+        <span class="logo-name">Notion</span>
+        <span class="logo-name">Linear</span>
+        <span class="logo-name">Loom</span>
+        <span class="logo-name">Retool</span>
+        <span class="logo-name">Clerk</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="s-eye">Features</div>
+    <h2 class="s-h">Built for teams that move fast</h2>
+    <p class="s-sub">Everything you need to connect your stack and keep work moving — without filing an engineering ticket.</p>
+    <div class="bento">
+      <div class="b-card fade-up">
+        <div class="b-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <h3 class="b-title">Visual flow builder</h3>
+        <p class="b-desc">Drag, drop, and connect steps on a canvas that feels as fast as drawing on a whiteboard. No YAML, no JSON — just your workflow, mapped out.</p>
+        <div class="mini-flow">
+          <div class="m-node"><span class="m-dot b"></span>When a deal reaches "Closed Won"</div>
+          <div class="m-node"><span class="m-dot o"></span>Wait 30 minutes</div>
+          <div class="m-node"><span class="m-dot g"></span>Create invoice in Stripe</div>
+        </div>
+      </div>
+      <div class="b-card fade-up d1">
+        <div class="b-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+        <h3 class="b-title">200+ integrations</h3>
+        <p class="b-desc">Connect tools your team already uses. From Slack to Salesforce, Notion to Stripe — everything can talk to everything.</p>
+        <div class="int-grid">
+          <div class="int-chip"><div class="int-dot" style="background:#4285F4"></div>Google</div>
+          <div class="int-chip"><div class="int-dot" style="background:#E01E5A"></div>Slack</div>
+          <div class="int-chip"><div class="int-dot" style="background:#FF7A59"></div>HubSpot</div>
+          <div class="int-chip"><div class="int-dot" style="background:#635BFF"></div>Stripe</div>
+          <div class="int-chip"><div class="int-dot" style="background:#000"></div>Notion</div>
+          <div class="int-chip"><div class="int-dot" style="background:#5E6AD2"></div>Linear</div>
+        </div>
+      </div>
+      <div class="b-card fade-up">
+        <div class="b-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3 class="b-title">Real-time monitoring</h3>
+        <p class="b-desc">Watch automations run live. Every step is logged with timing, payload, and error details — nothing fails silently.</p>
+      </div>
+      <div class="b-card fade-up d1">
+        <div class="b-icon"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h3 class="b-title">Team permissions &amp; workspaces</h3>
+        <p class="b-desc">Share workflows with your team, assign owners, and set access levels so the right people can edit, view, or trigger each automation — and nothing gets touched by accident.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="pricing">
+  <div class="wrap">
+    <div class="s-eye">Pricing</div>
+    <h2 class="s-h">Simple pricing that scales with you</h2>
+    <p class="s-sub">Start free and grow into a plan that fits your team. No hidden fees, no per-seat surprises on the base tiers.</p>
+    <div class="pricing-grid">
+      <div class="p-card fade-up">
+        <div class="p-tier">Starter</div>
+        <div class="p-price">$0</div>
+        <div class="p-period">forever free</div>
+        <p class="p-desc">For individuals and small teams getting started with automation.</p>
+        <ul class="p-feats">
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>1,000 runs per month</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>5 active workflows</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>50+ integrations</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>7-day run history</li>
+        </ul>
+        <a href="#" class="btn btn-outline btn-full">Get started free</a>
+      </div>
+      <div class="p-card pop fade-up d1">
+        <div class="pop-badge">Most popular</div>
+        <div class="p-tier">Pro</div>
+        <div class="p-price"><sup>$</sup>29</div>
+        <div class="p-period">per month, billed annually</div>
+        <p class="p-desc">For growing teams automating across multiple tools and workflows.</p>
+        <ul class="p-feats">
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>25,000 runs per month</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>Unlimited workflows</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>200+ integrations</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>30-day run history</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>Team collaboration (3 seats)</li>
+        </ul>
+        <a href="#" class="btn btn-accent btn-full">Start Pro trial</a>
+      </div>
+      <div class="p-card fade-up d2">
+        <div class="p-tier">Team</div>
+        <div class="p-price"><sup>$</sup>79</div>
+        <div class="p-period">per month, billed annually</div>
+        <p class="p-desc">For larger teams that need advanced controls, audit logs, and priority support.</p>
+        <ul class="p-feats">
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>100,000 runs per month</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>Unlimited workflows</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>SSO + advanced permissions</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>Audit logs + 90-day history</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>Unlimited seats</li>
+          <li class="p-feat"><span class="check"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>Priority support</li>
+        </ul>
+        <a href="#" class="btn btn-outline btn-full">Contact sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-sec">
+  <div class="wrap">
+    <div class="cta-inner">
+      <h2>Stop doing the same work twice</h2>
+      <p>Join 4,000+ teams who've automated the handoffs that were slowing them down.</p>
+      <form class="cta-form" onsubmit="return false">
+        <label for="cta-email" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Work email</label>
+        <input id="cta-email" type="email" class="cta-input" placeholder="you@company.com">
+        <button type="submit" class="btn btn-cta btn-lg">Get started</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-inner">
+      <span class="footer-logo">Flux<span style="color:var(--accent)">io</span></span>
+      <ul class="footer-links">
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms</a></li>
+        <li><a href="#">Security</a></li>
+        <li><a href="#">Status</a></li>
+        <li><a href="#">Docs</a></li>
+      </ul>
+      <span class="footer-copy">&copy; 2026 Fluxio, Inc.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
