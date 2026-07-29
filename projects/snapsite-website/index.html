@@ -758,6 +758,13 @@
     approveRow.classList.add("show");
     disclaimer.style.display = "block";
   }
+  function showDraftError(message) {
+    outEl.setAttribute("aria-busy", "false");
+    outEl.innerHTML = '<span class="placeholder">' + esc(message || "Could not draft the report. Please try again.") + '</span>';
+    approveRow.classList.remove("show");
+    disclaimer.style.display = "none";
+    setLoading(false);
+  }
 
   // Reveal the fallback sample progressively so it feels like live drafting.
   function typeOut(text) {
@@ -786,31 +793,42 @@
       body: JSON.stringify({ notes: notes, location: (locEl.value || "").trim() })
     })
       .then(function (r) {
-        if (!r.ok || !r.body) throw new Error("bad status");
+        if (!r.body) return Promise.reject(new Error("no-response-body"));
+        if (!r.ok) {
+          // Server is reachable but rejected the request (validation, size limit,
+          // upstream failure). Show the real reason instead of faking success.
+          return r.json().catch(function () { return {}; }).then(function (body) {
+            showDraftError(body.error);
+          });
+        }
         var reader = r.body.getReader();
         var decoder = new TextDecoder();
-        var buf = "", acc = "";
+        var buf = "", acc = "", stopped = false;
         function pump() {
           return reader.read().then(function (res) {
+            if (stopped) return;
             if (res.done) { finishDraft(); setLoading(false); return; }
             buf += decoder.decode(res.value, { stream: true });
             var frames = buf.split("\n\n");
             buf = frames.pop();
             frames.forEach(function (frame) {
+              if (stopped) return;
               var ev = (frame.match(/event: (.*)/) || [])[1];
               var dm = frame.match(/data: (.*)/);
               if (!dm) return;
               var data = JSON.parse(dm[1]);
               if (ev === "delta") { acc += data.text; paint(acc); }
-              else if (ev === "error") { throw new Error(data.error); }
+              else if (ev === "error") { stopped = true; showDraftError(data.error); }
             });
+            if (stopped) return;
             return pump();
           });
         }
         return pump();
       })
       .catch(function () {
-        // Backend not running (static preview) — reveal a representative draft.
+        // Backend truly unreachable (e.g. static preview with no server running)
+        // — reveal a representative draft, per the documented fallback behavior.
         typeOut(SAMPLE_DRAFT);
       });
   }

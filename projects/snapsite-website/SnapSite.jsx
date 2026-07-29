@@ -135,7 +135,8 @@ function ReportDemo() {
     "lower bracket on transformer 3 has surface rust, maybe an eighth inch deep. gauge reads 42 psi looks normal. access panel screws were loose, tightened two of them. photographed all three."
   );
   const [draft, setDraft] = React.useState("");
-  const [phase, setPhase] = React.useState("idle"); // idle | loading | done | approved
+  const [phase, setPhase] = React.useState("idle"); // idle | loading | done | approved | error
+  const [errorMsg, setErrorMsg] = React.useState("");
   const notesRef = React.useRef(null);
 
   const busy = phase === "loading";
@@ -144,13 +145,22 @@ function ReportDemo() {
     if (!notes.trim()) { notesRef.current?.focus(); return; }
     setPhase("loading");
     setDraft("");
+    setErrorMsg("");
     try {
       const res = await fetch("/api/draft-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: notes.trim(), location: location.trim() }),
       });
-      if (!res.ok || !res.body) throw new Error("bad status");
+      if (!res.body) throw new Error("no-response-body");
+      if (!res.ok) {
+        // Server is reachable but rejected the request (validation, size limit,
+        // upstream failure). Show the real reason instead of faking success.
+        const body = await res.json().catch(() => ({}));
+        setErrorMsg(body.error || "Could not draft the report. Please try again.");
+        setPhase("error");
+        return;
+      }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buf = "", acc = "";
@@ -166,12 +176,17 @@ function ReportDemo() {
           if (!dm) continue;
           const data = JSON.parse(dm[1]);
           if (ev === "delta") { acc += data.text; setDraft(acc); }
-          else if (ev === "error") throw new Error(data.error);
+          else if (ev === "error") {
+            setErrorMsg(data.error);
+            setPhase("error");
+            return;
+          }
         }
       }
       setPhase("done");
     } catch {
-      // Backend not running (static preview) — reveal a representative draft.
+      // Backend truly unreachable (e.g. static preview with no server running)
+      // — reveal a representative draft, per the documented fallback behavior.
       await typeOut(SAMPLE_DRAFT, setDraft);
       setPhase("done");
     }
@@ -208,7 +223,9 @@ function ReportDemo() {
             <div className="demo-panel-top"><FileIcon size={18} style={{ color: "var(--secondary)" }} /> AI draft</div>
             <div className="demo-body">
               <div className="demo-out" aria-live="polite" aria-busy={busy}>
-                {draft ? (
+                {phase === "error" ? (
+                  <span className="placeholder">{errorMsg}</span>
+                ) : draft ? (
                   <>
                     <div className={`draft-banner${phase === "approved" ? " approved" : ""}`}>
                       {phase === "approved"

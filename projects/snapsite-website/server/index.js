@@ -66,6 +66,16 @@ export function createApp(client) {
     }
   });
 
+  // Body-parser errors (e.g. the 64kb limit) reach here as thrown errors rather
+  // than a normal response, so without this they'd fall through to Express's
+  // default HTML error page instead of the JSON error shape the client expects.
+  app.use((err, req, res, next) => {
+    if (err?.type === "entity.too.large") {
+      return res.status(413).json({ error: "Field notes are too long. Please shorten them and try again." });
+    }
+    return res.status(err?.status || 500).json({ error: "Something went wrong. Please try again." });
+  });
+
   return app;
 }
 
