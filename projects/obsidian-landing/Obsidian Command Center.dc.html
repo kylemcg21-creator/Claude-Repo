@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<![CDATA[
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+@keyframes emberDrift { 0%{ transform:translateY(0) } 100%{ transform:translateY(-14px) } }
+body{margin:0;background:#0a0908}
+::selection{background:#c9a24a;color:#0a0908}
+</style>
+</helmet>
+
+<div style="width:1920px;height:1080px;background:radial-gradient(ellipse 900px 700px at 78% 8%, rgba(201,162,74,0.09), transparent 60%), radial-gradient(ellipse 1200px 900px at 10% 90%, rgba(120,110,95,0.10), transparent 60%), #0b0a08; font-family:'Manrope',sans-serif; color:#ece5d6; display:flex; overflow:hidden; position:relative;">
+
+  <!-- marble vein texture overlay -->
+  <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.05;mix-blend-mode:screen;pointer-events:none" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+    <filter id="marble"><feTurbulence type="fractalNoise" baseFrequency="0.008 0.02" numOctaves="4" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.79  0 0 0 0 0.64  0 0 0 0 0.29  0 0 0 1 0"/></filter>
+    <rect width="1920" height="1080" filter="url(#marble)"/>
+  </svg>
+
+  <!-- LEFT RAIL -->
+  <div style="width:88px;flex:none;background:#08070600;border-right:1px solid rgba(201,162,74,0.14);display:flex;flex-direction:column;align-items:center;padding:28px 0;gap:36px;position:relative;z-index:2;">
+    <div style="width:40px;height:40px;border:1px solid #c9a24a;transform:rotate(45deg);display:flex;align-items:center;justify-content:center;">
+      <div style="width:14px;height:14px;background:#c9a24a;transform:rotate(45deg);"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:26px;align-items:center;margin-top:10px;">
+      <div title="Vault" style="width:40px;height:40px;border-radius:10px;background:rgba(201,162,74,0.14);border:1px solid rgba(201,162,74,0.4);display:flex;align-items:center;justify-content:center;color:#e8c877;font-size:17px;">◆</div>
+      <div title="Graph" style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#8a8377;font-size:17px;">◈</div>
+      <div title="Search" style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#8a8377;font-size:17px;">⚲</div>
+      <div title="Tags" style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#8a8377;font-size:15px;">#</div>
+      <div title="Archive" style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#8a8377;font-size:16px;">▣</div>
+    </div>
+    <div style="margin-top:auto;width:32px;height:32px;border-radius:50%;overflow:hidden;border:1px solid rgba(201,162,74,0.35);">
+      <image-slot id="avatar-bust" shape="circle" placeholder="" style="width:32px;height:32px;"></image-slot>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;position:relative;z-index:2;">
+
+    <!-- TOP BAR -->
+    <div style="height:84px;flex:none;display:flex;align-items:center;padding:0 40px;gap:28px;border-bottom:1px solid rgba(201,162,74,0.14);">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:26px;letter-spacing:0.06em;color:#f1e9d8;">OBSIDIAN <span style="color:#c9a24a;font-style:italic;">Command</span></div>
+      <div style="flex:1;max-width:640px;margin-left:24px;display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(201,162,74,0.2);border-radius:10px;padding:12px 18px;">
+        <span style="color:#c9a24a;font-size:15px;">⌘K</span>
+        <span style="color:#7d766a;font-size:15px;">Search the vault, or command your day…</span>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:22px;">
+        <div style="text-align:right;">
+          <div style="font-size:11px;letter-spacing:0.14em;color:#7d766a;text-transform:uppercase;">Day</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#e8c877;">241 of 365</div>
+        </div>
+        <div style="width:1px;height:32px;background:rgba(201,162,74,0.2);"></div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;letter-spacing:0.14em;color:#7d766a;text-transform:uppercase;">Discipline</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#e8c877;">Amor Fati</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BODY GRID -->
+    <div style="flex:1;display:grid;grid-template-columns:300px 1fr 340px;gap:1px;background:rgba(201,162,74,0.1);overflow:hidden;">
+
+      <!-- VAULT TREE -->
+      <div style="background:#0a0908;padding:28px 22px;overflow:auto;">
+        <div style="font-size:11px;letter-spacing:0.16em;color:#7d766a;text-transform:uppercase;margin-bottom:16px;">Vault</div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;background:rgba(201,162,74,0.12);color:#e8c877;font-size:14.5px;">▾ &nbsp;01 · Discipline<span style="margin-left:auto;color:#9c8f6b;font-size:12px;">42</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px 9px 26px;color:#c8c1b0;font-size:14px;">Morning Rituals<span style="margin-left:auto;color:#655f54;font-size:12px;">12</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px 9px 26px;color:#c8c1b0;font-size:14px;">Cold Exposure<span style="margin-left:auto;color:#655f54;font-size:12px;">8</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;color:#c8c1b0;font-size:14.5px;">▸ &nbsp;02 · Reflections<span style="margin-left:auto;color:#655f54;font-size:12px;">88</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;color:#c8c1b0;font-size:14.5px;">▸ &nbsp;03 · Dichotomy of Control<span style="margin-left:auto;color:#655f54;font-size:12px;">19</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;color:#c8c1b0;font-size:14.5px;">▸ &nbsp;04 · Memento Mori<span style="margin-left:auto;color:#655f54;font-size:12px;">6</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;color:#c8c1b0;font-size:14.5px;">▸ &nbsp;05 · Marcus Aurelius<span style="margin-left:auto;color:#655f54;font-size:12px;">31</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;color:#c8c1b0;font-size:14.5px;">▸ &nbsp;06 · Seneca — Letters<span style="margin-left:auto;color:#655f54;font-size:12px;">54</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;color:#c8c1b0;font-size:14.5px;">▸ &nbsp;07 · Epictetus</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;color:#c8c1b0;font-size:14.5px;">▸ &nbsp;08 · Archive</div>
+        </div>
+
+        <div style="font-size:11px;letter-spacing:0.16em;color:#7d766a;text-transform:uppercase;margin:26px 0 12px;">Tags</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span style="padding:5px 12px;border-radius:20px;border:1px solid rgba(201,162,74,0.3);color:#c9a24a;font-size:12.5px;">#virtue</span>
+          <span style="padding:5px 12px;border-radius:20px;border:1px solid rgba(201,162,74,0.3);color:#c9a24a;font-size:12.5px;">#control</span>
+          <span style="padding:5px 12px;border-radius:20px;border:1px solid rgba(201,162,74,0.3);color:#c9a24a;font-size:12.5px;">#logos</span>
+          <span style="padding:5px 12px;border-radius:20px;border:1px solid rgba(201,162,74,0.3);color:#c9a24a;font-size:12.5px;">#discipline</span>
+        </div>
+      </div>
+
+      <!-- CENTER: DAILY DISCIPLINE -->
+      <div style="background:#0a0908;padding:36px 44px;overflow:auto;display:flex;flex-direction:column;gap:24px;">
+
+        <div style="position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(201,162,74,0.25);min-height:300px;display:flex;align-items:stretch;">
+          <image-slot id="hero-bust" shape="rect" placeholder="Drop a marble/gold portrait" style="position:absolute;inset:0;width:100%;height:100%;"></image-slot>
+          <div style="position:absolute;inset:0;background:linear-gradient(100deg, rgba(8,7,6,0.95) 30%, rgba(8,7,6,0.55) 62%, rgba(8,7,6,0.15) 100%);pointer-events:none;"></div>
+          <div style="position:relative;padding:36px 40px;display:flex;flex-direction:column;justify-content:center;gap:14px;max-width:560px;pointer-events:none;">
+            <div style="font-size:11px;letter-spacing:0.18em;color:#c9a24a;text-transform:uppercase;">Today's Meditation · Day 241</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:34px;line-height:1.28;color:#f4eddd;">"You have power over your mind — not outside events. Realize this, and you will find strength."</div>
+            <div style="font-size:14px;color:#9c8f6b;letter-spacing:0.04em;">— Marcus Aurelius, Meditations</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;">
+          <div style="border:1px solid rgba(201,162,74,0.18);border-radius:14px;padding:20px 22px;background:rgba(255,255,255,0.015);">
+            <div style="font-size:11px;letter-spacing:0.14em;color:#7d766a;text-transform:uppercase;">Streak</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:38px;color:#e8c877;margin-top:6px;">27 <span style="font-size:16px;color:#7d766a;font-family:'Manrope',sans-serif;">days</span></div>
+          </div>
+          <div style="border:1px solid rgba(201,162,74,0.18);border-radius:14px;padding:20px 22px;background:rgba(255,255,255,0.015);">
+            <div style="font-size:11px;letter-spacing:0.14em;color:#7d766a;text-transform:uppercase;">Notes Written</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:38px;color:#e8c877;margin-top:6px;">1,248</div>
+          </div>
+          <div style="border:1px solid rgba(201,162,74,0.18);border-radius:14px;padding:20px 22px;background:rgba(255,255,255,0.015);">
+            <div style="font-size:11px;letter-spacing:0.14em;color:#7d766a;text-transform:uppercase;">Virtue Score</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:38px;color:#e8c877;margin-top:6px;">92<span style="font-size:16px;color:#7d766a;font-family:'Manrope',sans-serif;">/100</span></div>
+          </div>
+        </div>
+
+        <div style="border:1px solid rgba(201,162,74,0.18);border-radius:14px;padding:24px 26px;flex:1;background:rgba(255,255,255,0.015);">
+          <div style="font-size:11px;letter-spacing:0.14em;color:#7d766a;text-transform:uppercase;margin-bottom:14px;">Evening Reflection · 3 Prompts</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;gap:14px;align-items:flex-start;">
+              <div style="width:22px;height:22px;border-radius:50%;border:1px solid #c9a24a;flex:none;margin-top:2px;"></div>
+              <div style="font-size:15px;color:#c8c1b0;line-height:1.5;">What did I do today that was within my control?</div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start;">
+              <div style="width:22px;height:22px;border-radius:50%;border:1px solid #c9a24a;flex:none;margin-top:2px;"></div>
+              <div style="font-size:15px;color:#c8c1b0;line-height:1.5;">Where did I let an outside opinion disturb my peace?</div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start;">
+              <div style="width:22px;height:22px;border-radius:50%;background:#c9a24a;flex:none;margin-top:2px;"></div>
+              <div style="font-size:15px;color:#655f54;line-height:1.5;text-decoration:line-through;">What would I regret on my last day?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: RECENT + NETWORK -->
+      <div style="background:#0a0908;padding:28px 24px;overflow:auto;display:flex;flex-direction:column;gap:26px;">
+        <div>
+          <div style="font-size:11px;letter-spacing:0.16em;color:#7d766a;text-transform:uppercase;margin-bottom:14px;">Recent Notes</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px;border-bottom:1px solid rgba(201,162,74,0.1);">
+              <div style="font-size:14.5px;color:#e8e0cf;">On the Shortness of Life</div>
+              <div style="font-size:12px;color:#7d766a;">Seneca — edited 2h ago</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px;border-bottom:1px solid rgba(201,162,74,0.1);">
+              <div style="font-size:14.5px;color:#e8e0cf;">Enchiridion, Ch. 8</div>
+              <div style="font-size:12px;color:#7d766a;">Epictetus — edited yesterday</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:12px;border-bottom:1px solid rgba(201,162,74,0.1);">
+              <div style="font-size:14.5px;color:#e8e0cf;">Negative Visualization</div>
+              <div style="font-size:12px;color:#7d766a;">Personal — edited 2 days ago</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div style="font-size:14.5px;color:#e8e0cf;">Book V — Meditations</div>
+              <div style="font-size:12px;color:#7d766a;">Marcus Aurelius — edited 3 days ago</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:11px;letter-spacing:0.16em;color:#7d766a;text-transform:uppercase;margin-bottom:14px;">Vault Graph</div>
+          <div style="position:relative;height:220px;border:1px solid rgba(201,162,74,0.18);border-radius:14px;background:rgba(255,255,255,0.015);overflow:hidden;">
+            <svg viewBox="0 0 300 220" style="width:100%;height:100%;">
+              <line x1="150" y1="110" x2="80" y2="60" stroke="#3a3527" stroke-width="1"/>
+              <line x1="150" y1="110" x2="220" y2="55" stroke="#3a3527" stroke-width="1"/>
+              <line x1="150" y1="110" x2="60" y2="160" stroke="#3a3527" stroke-width="1"/>
+              <line x1="150" y1="110" x2="230" y2="165" stroke="#3a3527" stroke-width="1"/>
+              <line x1="150" y1="110" x2="150" y2="35" stroke="#3a3527" stroke-width="1"/>
+              <line x1="80" y1="60" x2="150" y2="35" stroke="#3a3527" stroke-width="1"/>
+              <line x1="220" y1="55" x2="230" y2="165" stroke="#3a3527" stroke-width="1"/>
+              <circle cx="150" cy="110" r="7" fill="#e8c877"/>
+              <circle cx="80" cy="60" r="4" fill="#8a7f5c"/>
+              <circle cx="220" cy="55" r="4" fill="#8a7f5c"/>
+              <circle cx="60" cy="160" r="4" fill="#8a7f5c"/>
+              <circle cx="230" cy="165" r="4" fill="#8a7f5c"/>
+              <circle cx="150" cy="35" r="4" fill="#8a7f5c"/>
+            </svg>
+          </div>
+        </div>
+
+        <div style="margin-top:auto;border:1px solid rgba(201,162,74,0.25);border-radius:14px;padding:18px 20px;background:rgba(201,162,74,0.06);">
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:#e8c877;line-height:1.5;">"He who fears death will never do anything worthy of a living man."</div>
+          <div style="font-size:11.5px;color:#7d766a;margin-top:8px;">— Seneca</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>
