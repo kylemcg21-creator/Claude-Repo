@@ -3,36 +3,76 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SnapSite — Field Photo Organization for Inspection Teams</title>
+<title>SnapSite: Field Photo Organization for Inspection Teams</title>
 <meta name="description" content="SnapSite organizes GPS-tagged field photos by project location for construction and utility inspection teams. Workgroups, AI-assisted reports, map view, and one-tap close-out." />
+<meta name="color-scheme" content="light dark" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
 <style>
+  /*
+    Design tokens. One accent (green), one neutral ink (navy), one radius
+    scale (buttons 12px / inputs 10px / cards+panels 20px / pills full-round).
+    Amber is a scoped semantic color for the "needs approval" status chip
+    only - it is not a second decorative accent.
+  */
   :root {
-    --primary: #1E3A5F;
-    --primary-700: #16304f;
-    --on-primary: #FFFFFF;
-    --secondary: #2563EB;
-    --accent: #047857;
-    --accent-700: #036549;
-    --bg: #F8FAFC;
-    --fg: #0F172A;
-    --muted: #F1F3F5;
-    --muted-fg: #64748B;
-    --border: #E4E7EB;
-    --destructive: #DC2626;
-    --radius: 14px;
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --muted: #F1F4F7;
+    --fg: #0B1220;
+    --muted-fg: #5B6472;
+    --border: #E3E7EC;
+    --navy: #0F2138;
+    --accent: #0B7D57;
+    --accent-fg: #FFFFFF;
+    --accent-tint: rgba(11,125,87,.08);
+    --accent-tint-strong: rgba(11,125,87,.14);
+    --warn: #B45309;
+    --warn-tint: rgba(180,83,9,.08);
+    --danger: #DC2626;
+    --header-bg: rgba(247,248,250,.85);
+    --header-bg-solid: #F7F8FA;
+
+    --r-btn: 12px;
+    --r-input: 10px;
+    --r-card: 20px;
+    --r-pill: 999px;
     --maxw: 1200px;
-    --shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 1px 3px rgba(15,23,42,.08);
-    --shadow-md: 0 4px 12px rgba(15,23,42,.08), 0 2px 4px rgba(15,23,42,.04);
-    --shadow-lg: 0 20px 40px rgba(15,23,42,.12);
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.05), 0 1px 3px rgba(15,23,42,.06);
+    --shadow-md: 0 10px 24px rgba(15,23,42,.09);
+    --shadow-lg: 0 28px 56px rgba(15,23,42,.16);
+    --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B1220;
+      --surface: #121B2E;
+      --muted: #17223A;
+      --fg: #EDF2F7;
+      --muted-fg: #96A3B8;
+      --border: rgba(255,255,255,.09);
+      --navy: #0B1220;
+      --accent: #1BC98E;
+      --accent-fg: #06251C;
+      --accent-tint: rgba(27,201,142,.14);
+      --accent-tint-strong: rgba(27,201,142,.2);
+      --warn: #F59E0B;
+      --warn-tint: rgba(245,158,11,.12);
+      --danger: #F87171;
+      --header-bg: rgba(11,18,32,.78);
+      --header-bg-solid: #0B1220;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.24);
+      --shadow-md: 0 10px 24px rgba(0,0,0,.36);
+      --shadow-lg: 0 28px 56px rgba(0,0,0,.5);
+    }
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     color: var(--fg);
     background: var(--bg);
     line-height: 1.6;
@@ -40,55 +80,62 @@
   }
   a { color: inherit; text-decoration: none; }
   img, svg { display: block; max-width: 100%; }
+  img { background: var(--muted); }
   .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
   .eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-    color: var(--accent); background: rgba(5,150,105,.08);
-    padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(5,150,105,.18);
+    color: var(--accent); background: var(--accent-tint);
+    padding: 6px 14px; border-radius: var(--r-pill); border: 1px solid var(--accent-tint-strong);
   }
-  h1, h2, h3 { line-height: 1.15; letter-spacing: -.02em; margin: 0; font-weight: 700; }
-  h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; }
-  h2 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); }
-  h3 { font-size: 1.2rem; }
+  h1, h2, h3 { line-height: 1.15; letter-spacing: -.02em; margin: 0; font-weight: 700; color: var(--fg); }
+  h1 { font-size: clamp(2.15rem, 4.4vw, 3.35rem); font-weight: 800; }
+  h2 { font-size: clamp(1.7rem, 3.2vw, 2.4rem); }
+  h3 { font-size: 1.15rem; }
   p { margin: 0; }
-  .lead { font-size: 1.15rem; color: var(--muted-fg); }
+  .lead { font-size: 1.1rem; color: var(--muted-fg); }
+  .mono { font-family: var(--font-mono); }
+
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 10px;
     font-family: inherit; font-weight: 600; font-size: 1rem; cursor: pointer;
-    padding: 14px 26px; border-radius: 12px; border: 1px solid transparent;
-    transition: transform .2s ease, background .2s ease, box-shadow .2s ease, border-color .2s ease;
-    min-height: 48px;
+    padding: 14px 24px; border-radius: var(--r-btn); border: 1px solid transparent;
+    transition: transform .18s ease, background .18s ease, box-shadow .18s ease, border-color .18s ease;
+    min-height: 48px; white-space: nowrap;
   }
-  .btn:focus-visible { outline: 3px solid rgba(37,99,235,.5); outline-offset: 2px; }
-  a:focus-visible, button:focus-visible { outline: 3px solid rgba(37,99,235,.5); outline-offset: 3px; border-radius: 6px; }
-  .btn-primary { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
-  .btn-primary:hover { background: var(--accent-700); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-  .btn-ghost { background: #fff; color: var(--primary); border-color: var(--border); }
-  .btn-ghost:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .btn:focus-visible { outline: 3px solid var(--accent-tint-strong); outline-offset: 2px; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--accent-tint-strong); outline-offset: 3px; border-radius: 6px; }
+  .btn-primary { background: var(--accent); color: var(--accent-fg); box-shadow: var(--shadow-sm); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .btn-primary:active { transform: translateY(0) scale(.98); }
+  .btn-ghost { background: var(--surface); color: var(--fg); border-color: var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .btn-ghost:active { transform: translateY(0) scale(.98); }
   .btn-light { background: rgba(255,255,255,.12); color:#fff; border-color: rgba(255,255,255,.25); }
   .btn-light:hover { background: rgba(255,255,255,.2); transform: translateY(-2px); }
+  .btn[disabled] { opacity:.65; cursor:not-allowed; transform:none; }
+  .btn-sm { padding:11px 18px; min-height:44px; font-size:.9rem; }
 
   /* Header */
   header {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(248,250,252,.85); backdrop-filter: blur(12px);
+    background: var(--header-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
-  .nav { display: flex; align-items: center; justify-content: space-between; height: 70px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; color: var(--primary); }
-  .brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--primary); display:grid; place-items:center; color:#fff; }
-  .nav-links { display: flex; align-items: center; gap: 30px; }
-  .nav-links a.link { font-weight: 500; color: var(--muted-fg); transition: color .2s; }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 70px; gap: 16px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; color: var(--fg); flex: none; }
+  .brand-mark { width: 32px; height: 32px; border-radius: 9px; background: var(--navy); display:grid; place-items:center; color:#fff; flex: none; }
+  .nav-links { display: flex; align-items: center; gap: 26px; flex-wrap: nowrap; }
+  .nav-links a.link { font-weight: 500; font-size: .95rem; color: var(--muted-fg); transition: color .2s; white-space: nowrap; }
   .nav-links a.link:hover { color: var(--fg); }
-  .menu-btn { display: none; background:none; border:none; cursor:pointer; padding:8px; color: var(--primary); }
-  @media (max-width: 880px) {
+  .menu-btn { display: none; background:none; border:none; cursor:pointer; padding:8px; color: var(--fg); }
+  @media (max-width: 980px) {
     .menu-btn { display: block; }
     .nav-links {
       position: absolute; top: 70px; left: 0; right: 0;
-      flex-direction: column; align-items: stretch; gap: 6px;
-      background: rgba(248,250,252,.98); backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border); padding: 14px 24px 20px;
+      flex-direction: column; align-items: stretch; gap: 4px;
+      background: var(--header-bg-solid); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 12px 24px 20px;
       box-shadow: var(--shadow-md); display: none;
     }
     header.nav-open .nav-links { display: flex; }
@@ -96,167 +143,229 @@
     .nav-links a.btn-primary { margin-top: 8px; }
   }
 
+  /* Motion / reveal */
+  [data-reveal] {
+    opacity: 0; transform: translateY(18px);
+    transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
+    transition-delay: calc(var(--i, 0) * 70ms);
+  }
+  [data-reveal].is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto !important; animation: none !important; }
+    [data-reveal] { opacity: 1 !important; transform: none !important; }
+  }
+
   /* Hero */
   .hero { position: relative; overflow: hidden;
     background:
-      radial-gradient(1200px 500px at 80% -10%, rgba(37,99,235,.10), transparent 60%),
-      radial-gradient(900px 400px at 10% 10%, rgba(5,150,105,.08), transparent 60%);
+      radial-gradient(1100px 480px at 82% -10%, var(--accent-tint), transparent 60%),
+      radial-gradient(800px 380px at 6% 6%, var(--accent-tint), transparent 60%);
   }
-  .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; padding: 84px 0 72px; }
-  @media (max-width: 920px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; padding: 56px 0; } }
-  .hero h1 { margin: 22px 0 18px; }
-  .hero-cta { display: flex; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
-  .hero-meta { margin-top: 22px; display:flex; align-items:center; gap:10px; color: var(--muted-fg); font-size:.92rem; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 52px; align-items: center; padding: clamp(56px,8vw,84px) 0 clamp(48px,6vw,68px); }
+  @media (max-width: 920px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; padding: 48px 0 40px; } }
+  .hero h1 { margin: 20px 0 16px; }
+  .hero-cta { display: flex; gap: 14px; margin-top: 26px; flex-wrap: wrap; }
 
-  /* Phone mock */
+  /* Phone mock (hardware bezel: fixed dark chrome regardless of theme, not a themed surface) */
   .phone {
-    width: 300px; max-width: 100%; margin: 0 auto;
+    width: 290px; max-width: 100%; margin: 0 auto;
     background: #0b1f33; border-radius: 38px; padding: 12px;
-    box-shadow: var(--shadow-lg); border: 1px solid rgba(15,23,42,.2);
+    box-shadow: var(--shadow-lg); border: 1px solid rgba(15,23,42,.25);
   }
   .phone-screen { background: var(--bg); border-radius: 28px; overflow: hidden; }
-  .ps-top { background: var(--primary); color:#fff; padding: 18px 16px 14px; }
+  .ps-top { background: var(--navy); color:#fff; padding: 16px 16px 12px; }
   .ps-top small { opacity:.7; font-size: 11px; letter-spacing:.05em; text-transform: uppercase;}
   .ps-top .loc { display:flex; align-items:center; gap:7px; font-weight:600; margin-top:4px; }
-  .ps-photos { display:grid; grid-template-columns: repeat(3,1fr); gap:4px; padding:4px; }
-  .ps-photos div { aspect-ratio:1; border-radius:6px; }
-  .pin { background: linear-gradient(135deg,#3b6ea5,#1E3A5F);}
-  .pin2 { background: linear-gradient(135deg,#10b981,#047857);}
-  .pin3 { background: linear-gradient(135deg,#475569,#1e293b);}
+  .ps-photos { display:grid; grid-template-columns: repeat(3,1fr); gap:3px; padding:3px; }
+  .ps-photos img { aspect-ratio:1; width:100%; height:100%; object-fit:cover; }
   .ps-bar { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-top:1px solid var(--border); }
-  .ps-cam { width:54px; height:54px; border-radius:50%; background: var(--accent); display:grid; place-items:center; color:#fff; box-shadow: 0 6px 16px rgba(5,150,105,.4); margin-top:-34px; border:4px solid var(--bg);}
+  .ps-cam { width:52px; height:52px; border-radius:50%; background: var(--accent); display:grid; place-items:center; color:var(--accent-fg); box-shadow: 0 6px 16px var(--accent-tint-strong); margin-top:-32px; border:4px solid var(--bg);}
 
   /* Stats */
-  .stats { border-top:1px solid var(--border); border-bottom:1px solid var(--border); background:#fff; }
-  .stats-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:24px; padding:36px 0; text-align:center; }
+  .stats { border-top:1px solid var(--border); border-bottom:1px solid var(--border); background: var(--surface); }
+  .stats-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:24px; padding:32px 0 10px; text-align:center; }
   @media (max-width:680px){ .stats-grid{ grid-template-columns: repeat(2,1fr);} }
-  .stat .num { font-size: 2rem; font-weight: 800; color: var(--primary); }
-  .stat .lbl { color: var(--muted-fg); font-size:.92rem; }
+  .stat .num { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 600; color: var(--fg); }
+  .stat .lbl { color: var(--muted-fg); font-size:.88rem; margin-top: 2px; }
+  .stats-note { text-align:center; color: var(--muted-fg); font-size: .85rem; padding: 8px 0 26px; }
 
-  /* Sections */
   section { padding: 84px 0; }
-  .sec-head { max-width: 680px; margin: 0 auto 56px; text-align:center; }
-  .sec-head h2 { margin: 16px 0 14px; }
+  .sec-head { max-width: 640px; margin: 0 auto 48px; text-align:center; }
+  .sec-head.left { text-align: left; margin: 0 0 40px; max-width: 640px; }
 
-  /* Features */
-  .features { display:grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
-  @media (max-width: 920px){ .features{ grid-template-columns: repeat(2,1fr);} }
-  @media (max-width: 600px){ .features{ grid-template-columns: 1fr;} }
-  .card {
-    background:#fff; border:1px solid var(--border); border-radius: var(--radius);
-    padding: 28px; box-shadow: var(--shadow-sm); transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  /* Bento features */
+  .bento { display:grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(120px,auto); gap: 18px; }
+  .bento-tile {
+    background: var(--surface); border:1px solid var(--border); border-radius: var(--r-card);
+    padding: 26px; box-shadow: var(--shadow-sm); transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    display:flex; flex-direction:column; overflow:hidden; position:relative;
   }
-  .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: #cbd5e1; }
-  .ficon { width:48px; height:48px; border-radius: 12px; display:grid; place-items:center; background: rgba(30,58,95,.07); color: var(--primary); margin-bottom:18px; }
-  .card h3 { margin-bottom: 8px; }
-  .card p { color: var(--muted-fg); font-size:.96rem; }
+  .bento-tile:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--accent-tint-strong); }
+  .bento-tile .ficon { width:44px; height:44px; border-radius: 12px; display:grid; place-items:center; background: var(--accent-tint); color: var(--accent); margin-bottom:16px; flex: none; }
+  .bento-tile h3 { margin-bottom: 8px; }
+  .bento-tile p { color: var(--muted-fg); font-size:.95rem; }
+  .t-photos   { grid-column: span 2; grid-row: span 2; }
+  .t-map      { grid-column: span 2; }
+  .t-work     { grid-column: span 1; }
+  .t-share    { grid-column: span 1; }
+  .t-ai       { grid-column: span 2; background: var(--accent-tint); border-color: var(--accent-tint-strong); }
+  .t-approve  { grid-column: span 1; }
+  .t-camera   { grid-column: span 1; }
+  .t-photos .grid-photos { margin-top: auto; display:grid; grid-template-columns: repeat(3,1fr); gap:5px; }
+  .t-photos .grid-photos img { border-radius: 8px; aspect-ratio:1; object-fit:cover; }
+  .t-map { background:
+      linear-gradient(var(--border) 1px, transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0/24px 24px,
+      var(--muted);
+  }
+  .t-map .mappin { position:absolute; width:14px; height:14px; border-radius:50% 50% 50% 0; transform: rotate(-45deg); box-shadow: var(--shadow-sm); }
+  @media (max-width: 980px) {
+    .bento { grid-template-columns: repeat(2,1fr); }
+    .t-photos, .t-map, .t-ai { grid-column: span 2; grid-row: auto; }
+  }
+  @media (max-width: 620px) {
+    .bento { grid-template-columns: 1fr; }
+    .t-photos, .t-map, .t-ai, .t-work, .t-share, .t-approve, .t-camera { grid-column: span 1; grid-row: auto; }
+  }
 
-  /* How it works */
-  .how { background:#fff; }
-  .steps { display:grid; grid-template-columns: repeat(4,1fr); gap: 24px; counter-reset: step; }
-  @media (max-width: 920px){ .steps{ grid-template-columns: repeat(2,1fr);} }
-  @media (max-width: 520px){ .steps{ grid-template-columns: 1fr;} }
-  .step { position:relative; padding-top: 8px; }
-  .step .n { width:44px; height:44px; border-radius:12px; background: var(--primary); color:#fff; font-weight:700; display:grid; place-items:center; margin-bottom:16px; }
+  /* How it works: connected timeline */
+  .how { background: var(--surface); }
+  .timeline { display:grid; grid-template-columns: repeat(4,1fr); gap: 24px; position: relative; }
+  .timeline::before {
+    content:""; position:absolute; top:21px; left: calc(12.5% - 1px); right: calc(12.5% - 1px);
+    height:2px; background: var(--border); z-index:0;
+  }
+  @media (max-width: 920px){ .timeline{ grid-template-columns: repeat(2,1fr); row-gap: 36px;} .timeline::before{ display:none; } }
+  @media (max-width: 560px){ .timeline{ grid-template-columns: 1fr; } }
+  .step { position:relative; z-index:1; }
+  .step .n {
+    width:44px; height:44px; border-radius:50%; background: var(--surface); color: var(--fg);
+    font-weight:700; font-family: var(--font-mono); display:grid; place-items:center; margin-bottom:16px;
+    border: 2px solid var(--accent); box-shadow: 0 0 0 6px var(--bg);
+  }
   .step h3 { font-size:1.05rem; margin-bottom:6px; }
   .step p { color: var(--muted-fg); font-size:.93rem; }
 
-  /* Preview strip */
-  .shots { display:grid; grid-template-columns: repeat(3,1fr); gap:20px; }
-  @media (max-width: 820px){ .shots{ grid-template-columns:1fr; } }
-  .shot { border-radius: var(--radius); overflow:hidden; border:1px solid var(--border); background:#fff; box-shadow: var(--shadow-sm); }
-  .shot-top { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; font-weight:600; }
-  .shot-body { padding:0; height:300px; position:relative; }
-  .map-bg { width:100%; height:100%; background:
-      linear-gradient(rgba(30,58,95,.04) 1px, transparent 1px) 0 0/26px 26px,
-      linear-gradient(90deg, rgba(30,58,95,.04) 1px, transparent 1px) 0 0/26px 26px,
-      #eef2f6; position:relative; }
+  /* Preview: tabbed showcase */
+  .showcase { border:1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--shadow-sm); overflow:hidden; }
+  .showcase-tabs { display:flex; gap:4px; padding:10px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .showcase-tab {
+    font-family: inherit; font-weight:600; font-size:.9rem; color: var(--muted-fg);
+    background:none; border:1px solid transparent; border-radius: var(--r-btn); padding:9px 16px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; transition: background .2s, color .2s;
+  }
+  .showcase-tab:hover { color: var(--fg); }
+  .showcase-tab.active { background: var(--accent-tint); color: var(--accent); }
+  .showcase-body { min-height: 340px; }
+  .showcase-panel { padding: 0; }
+  .showcase-panel[hidden] { display:none; }
+  .grid-photos { display:grid; grid-template-columns: repeat(4,1fr); gap:6px; padding:16px; }
+  .grid-photos img { aspect-ratio:1; border-radius:8px; object-fit:cover; width:100%; height:100%; }
+  @media (max-width: 560px){ .grid-photos { grid-template-columns: repeat(3,1fr); } }
+  .map-bg { width:100%; height:340px; position:relative; background:
+      linear-gradient(var(--border) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0/28px 28px,
+      var(--muted); }
   .mappin { position:absolute; width:18px; height:18px; border-radius:50% 50% 50% 0; transform: rotate(-45deg); box-shadow: var(--shadow-sm); }
-  .grid-photos { display:grid; grid-template-columns: repeat(3,1fr); gap:6px; padding:14px; }
-  .grid-photos div { aspect-ratio:1; border-radius:8px; }
-  .note-row { display:flex; gap:10px; padding:14px; align-items:flex-start; border-bottom:1px solid var(--border); }
-  .note-thumb { width:46px; height:46px; border-radius:8px; flex:none; }
-  .note-row p { font-size:.85rem; color: var(--muted-fg); }
-  .ai-chip { display:inline-block; font-size:11px; font-weight:600; color: var(--secondary); background: rgba(37,99,235,.1); padding:2px 8px; border-radius:6px; margin-bottom:4px;}
+  .mappin.active::after {
+    content:""; position:absolute; inset:-8px; border-radius:50%; border:2px solid currentColor; opacity:.5;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .mappin.active::after { animation: pin-pulse 1.8s ease-out infinite; }
+  }
+  @keyframes pin-pulse { 0% { transform: scale(.6); opacity:.6; } 100% { transform: scale(1.8); opacity:0; } }
+  .note-row { display:flex; gap:12px; padding:16px; align-items:flex-start; border-bottom:1px solid var(--border); }
+  .note-row:last-child { border-bottom: none; }
+  .note-thumb { width:46px; height:46px; border-radius:8px; flex:none; object-fit:cover; }
+  .note-row p { font-size:.9rem; color: var(--muted-fg); }
+  .status-chip { display:inline-block; font-size:11px; font-weight:600; padding:2px 9px; border-radius: var(--r-pill); margin-bottom:5px; }
+  .status-chip.pending { color: var(--warn); background: var(--warn-tint); }
+  .status-chip.approved { color: var(--accent); background: var(--accent-tint); }
+  .status-chip.neutral { color: var(--muted-fg); background: var(--muted); }
 
   /* Pricing */
-  .pricing { display:grid; grid-template-columns: repeat(3,1fr); gap:22px; align-items:stretch; }
-  @media (max-width: 880px){ .pricing{ grid-template-columns:1fr; max-width:460px; margin:0 auto;} }
-  .plan { background:#fff; border:1px solid var(--border); border-radius: var(--radius); padding:30px; display:flex; flex-direction:column; box-shadow: var(--shadow-sm); }
-  .plan.pop { border-color: var(--accent); box-shadow: 0 10px 30px rgba(5,150,105,.15); position:relative; }
-  .plan.pop::before { content:"Most popular"; position:absolute; top:-13px; left:50%; transform:translateX(-50%); background: var(--accent); color:#fff; font-size:12px; font-weight:600; padding:5px 14px; border-radius:999px; }
-  .plan h3 { font-size:1.15rem; }
-  .price { font-size:2.4rem; font-weight:800; color: var(--primary); margin:12px 0 2px; }
-  .price span { font-size:1rem; font-weight:500; color: var(--muted-fg); }
-  .plan ul { list-style:none; padding:0; margin:20px 0 26px; display:grid; gap:11px; }
-  .plan li { display:flex; gap:10px; align-items:flex-start; font-size:.94rem; color:#334155; }
+  .pricing { display:grid; grid-template-columns: 1fr 1.12fr 1fr; gap:20px; align-items:stretch; }
+  @media (max-width: 880px){ .pricing{ grid-template-columns:1fr; max-width:440px; margin:0 auto;} }
+  .plan { background: var(--surface); border:1px solid var(--border); border-radius: var(--r-card); padding:28px; display:flex; flex-direction:column; box-shadow: var(--shadow-sm); }
+  .plan.pop { border-color: var(--accent); box-shadow: var(--shadow-md); position:relative; padding-top: 34px; }
+  .plan.pop::before { content:"Most popular"; position:absolute; top:-13px; left:50%; transform:translateX(-50%); background: var(--accent); color: var(--accent-fg); font-size:12px; font-weight:600; padding:5px 14px; border-radius: var(--r-pill); }
+  .plan h3 { font-size:1.1rem; }
+  .price { font-family: var(--font-mono); font-size:2.1rem; font-weight:600; color: var(--fg); margin:12px 0 2px; }
+  .price span { font-family: var(--font-sans); font-size:1rem; font-weight:500; color: var(--muted-fg); }
+  .plan .desc { color:var(--muted-fg); font-size:.92rem; }
+  .plan ul { list-style:none; padding:0; margin:20px 0 24px; display:grid; gap:11px; }
+  .plan li { display:flex; gap:10px; align-items:flex-start; font-size:.94rem; color: var(--fg); }
   .plan li svg { flex:none; margin-top:3px; color: var(--accent); }
   .plan .btn { margin-top:auto; width:100%; }
 
-  /* Testimonials */
-  .tests { display:grid; grid-template-columns: repeat(3,1fr); gap:22px; }
-  @media (max-width: 880px){ .tests{ grid-template-columns:1fr;} }
-  .quote { background:#fff; border:1px solid var(--border); border-radius: var(--radius); padding:28px; box-shadow: var(--shadow-sm); }
-  .quote p { font-size:1rem; color:#1e293b; }
-  .stars { color:#f59e0b; margin-bottom:14px; letter-spacing:2px; }
+  /* Testimonials: scroll-snap carousel */
+  .quote-row { display:flex; align-items:center; gap: 10px; margin-bottom: 24px; }
+  .quote-row .sec-head { margin: 0; flex: 1; }
+  .carousel-nav { display:flex; gap:8px; flex: none; }
+  .carousel-btn {
+    width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background: var(--surface);
+    color: var(--fg); display:grid; place-items:center; cursor:pointer; transition: border-color .2s, transform .2s;
+  }
+  .carousel-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .quote-track {
+    display:flex; gap:20px; overflow-x:auto; scroll-snap-type: x mandatory; padding-bottom: 6px;
+    scrollbar-width: thin;
+  }
+  .quote { flex: 0 0 min(360px,86vw); scroll-snap-align: start; background: var(--surface); border:1px solid var(--border); border-radius: var(--r-card); padding:26px; box-shadow: var(--shadow-sm); }
+  .quote p { font-size:1rem; color: var(--fg); }
+  .stars { color:#D97706; margin-bottom:14px; letter-spacing:2px; }
   .who { display:flex; align-items:center; gap:12px; margin-top:20px; }
-  .avatar { width:44px; height:44px; border-radius:50%; background: var(--primary); color:#fff; display:grid; place-items:center; font-weight:700; }
-  .who .nm { font-weight:600; font-size:.95rem; }
-  .who .rl { font-size:.85rem; color: var(--muted-fg); }
+  .avatar { width:42px; height:42px; border-radius:50%; background: var(--navy); color:#fff; display:grid; place-items:center; font-weight:700; font-size:.85rem; flex:none; }
+  .who .nm { font-weight:600; font-size:.94rem; }
+  .who .rl { font-size:.84rem; color: var(--muted-fg); }
 
   /* CTA band */
-  .cta-band { background: var(--primary); color:#fff; border-radius: 24px; padding: 56px; text-align:center; }
+  .cta-band { background: var(--navy); color:#fff; border-radius: var(--r-card); padding: 52px; text-align:center; }
   .cta-band h2 { color:#fff; }
-  .cta-band p { color: rgba(255,255,255,.8); max-width:540px; margin: 14px auto 28px; }
+  .cta-band p { color: rgba(255,255,255,.78); max-width:520px; margin: 14px auto 26px; }
   .badges { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
-  .store { display:flex; align-items:center; gap:10px; background:#0b1f33; border:1px solid rgba(255,255,255,.18); padding:10px 18px; border-radius:12px; transition: transform .2s, border-color .2s; }
+  .store { display:flex; align-items:center; gap:10px; background:#0b1f33; border:1px solid rgba(255,255,255,.18); padding:10px 18px; border-radius: var(--r-btn); transition: transform .2s, border-color .2s; }
   .store:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.4); }
   .store small { display:block; font-size:10px; opacity:.7; text-transform:uppercase; letter-spacing:.05em; }
   .store strong { font-size:1rem; }
 
   /* Footer */
-  footer { background:#0b1f33; color:#cbd5e1; padding: 56px 0 30px; margin-top: 84px; }
-  .foot-grid { display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap:36px; }
+  footer { background:#0b1f33; color:#cbd5e1; padding: 52px 0 28px; margin-top: 84px; }
+  .foot-grid { display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap:32px; }
   @media (max-width:760px){ .foot-grid{ grid-template-columns: 1fr 1fr;} }
-  footer h4 { color:#fff; font-size:.95rem; margin:0 0 14px; }
-  footer a.fl { display:block; color:#94a3b8; padding:5px 0; font-size:.92rem; transition:color .2s; }
+  footer h4 { color:#fff; font-size:.92rem; margin:0 0 14px; }
+  footer a.fl { display:block; color:#94a3b8; padding:5px 0; font-size:.9rem; transition:color .2s; }
   footer a.fl:hover { color:#fff; }
   footer .brand { color:#fff; }
-  footer .brand-mark { background:#fff; color: var(--primary); }
-  .foot-bottom { border-top:1px solid rgba(255,255,255,.1); margin-top:40px; padding-top:22px; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; color:#64748b; font-size:.85rem; }
+  footer .brand-mark { background:#fff; color: var(--navy); }
+  .foot-bottom { border-top:1px solid rgba(255,255,255,.1); margin-top:36px; padding-top:20px; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; color:#64748b; font-size:.85rem; }
 
   /* AI report drafting demo */
-  .demo { background:#fff; }
-  .demo-grid { display:grid; grid-template-columns: 1fr 1fr; gap:28px; align-items:start; }
+  .demo { background: var(--bg); }
+  .demo-grid { display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:start; }
   @media (max-width: 880px){ .demo-grid{ grid-template-columns:1fr; } }
-  .demo-panel { border:1px solid var(--border); border-radius: var(--radius); background: var(--bg); box-shadow: var(--shadow-sm); overflow:hidden; }
-  .demo-panel-top { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; font-weight:600; background:#fff; }
+  .demo-panel { border:1px solid var(--border); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--shadow-sm); overflow:hidden; }
+  .demo-panel-top { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; font-weight:600; }
   .demo-body { padding:20px; }
   .demo-label { display:block; font-size:.82rem; font-weight:600; color: var(--muted-fg); margin:0 0 6px; letter-spacing:.02em; }
   .demo-input, .demo-textarea {
     width:100%; font-family:inherit; font-size:.95rem; color: var(--fg);
-    padding:12px 14px; border:1px solid var(--border); border-radius:10px; background:#fff; resize:vertical;
+    padding:12px 14px; border:1px solid var(--border); border-radius: var(--r-input); background: var(--bg); resize:vertical;
   }
-  .demo-input:focus, .demo-textarea:focus { outline:none; border-color: var(--secondary); box-shadow:0 0 0 3px rgba(37,99,235,.15); }
+  .demo-input:focus, .demo-textarea:focus { outline:none; border-color: var(--accent); box-shadow:0 0 0 3px var(--accent-tint-strong); }
   .demo-textarea { min-height:150px; line-height:1.5; }
   .demo-actions { display:flex; gap:12px; align-items:center; margin-top:16px; flex-wrap:wrap; }
   .demo-hint { font-size:.82rem; color: var(--muted-fg); margin-top:12px; }
-  .demo-out { min-height:230px; white-space:pre-wrap; font-size:.92rem; color:#1e293b; line-height:1.6; }
+  .demo-out { min-height:230px; white-space:pre-wrap; font-size:.92rem; color: var(--fg); line-height:1.6; }
   .demo-out .placeholder { color: var(--muted-fg); }
-  .demo-out h1, .demo-out h2, .demo-out h3 { font-size:1rem; margin:14px 0 4px; color: var(--primary); }
+  .demo-out h1, .demo-out h2, .demo-out h3 { font-size:1rem; margin:14px 0 4px; color: var(--fg); }
   .demo-out strong { color: var(--fg); }
-  .draft-banner { display:flex; align-items:center; gap:8px; font-size:.82rem; font-weight:600; color: var(--secondary); background: rgba(37,99,235,.1); padding:8px 12px; border-radius:8px; margin-bottom:14px; }
-  .draft-banner.approved { color: var(--accent); background: rgba(5,150,105,.1); }
+  .draft-banner { display:flex; align-items:center; gap:8px; font-size:.82rem; font-weight:600; color: var(--warn); background: var(--warn-tint); padding:8px 12px; border-radius: var(--r-btn); margin-bottom:14px; }
+  .draft-banner.approved { color: var(--accent); background: var(--accent-tint); }
   .approve-row { display:none; gap:10px; margin-top:18px; padding-top:16px; border-top:1px solid var(--border); flex-wrap:wrap; }
   .approve-row.show { display:flex; }
-  .btn-sm { padding:11px 18px; min-height:44px; font-size:.9rem; }
   .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .btn[disabled] { opacity:.65; cursor:not-allowed; transform:none; }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; scroll-behavior: auto !important; animation: none !important; }
-  }
 </style>
 </head>
 <body>
@@ -264,7 +373,7 @@
   <div class="wrap nav">
     <a href="#top" class="brand" aria-label="SnapSite home">
       <span class="brand-mark" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg>
       </span>
       SnapSite
     </a>
@@ -277,7 +386,7 @@
       <a class="btn btn-primary" href="#download">Get the app</a>
     </nav>
     <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="primary-nav">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
   </div>
 </header>
@@ -292,17 +401,13 @@
           Built for field inspection teams
         </span>
         <h1>Every field photo, organized by the site it came from.</h1>
-        <p class="lead">SnapSite auto-groups GPS-tagged photos by project location so construction and utility inspection crews capture, annotate, and close out work without the end-of-day file shuffle.</p>
+        <p class="lead">SnapSite auto-groups GPS-tagged photos by project location, so crews capture, annotate, and close out work without the end-of-day file shuffle.</p>
         <div class="hero-cta">
           <a class="btn btn-primary" href="#download">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg>
-            Start capturing free
+            Get the app
           </a>
           <a class="btn btn-ghost" href="#how">See how it works</a>
-        </div>
-        <div class="hero-meta">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-          No credit card · Works offline in the field
         </div>
       </div>
       <div aria-hidden="true">
@@ -312,18 +417,24 @@
               <small>Active project</small>
               <div class="loc">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                Substation 14 — Riverside
+                Substation 14, Riverside
               </div>
             </div>
             <div class="ps-photos">
-              <div class="pin"></div><div class="pin2"></div><div class="pin3"></div>
-              <div class="pin3"></div><div class="pin"></div><div class="pin2"></div>
-              <div class="pin2"></div><div class="pin3"></div><div class="pin"></div>
+              <img src="https://picsum.photos/seed/snapsite-bracket/160/160" width="160" height="160" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-gauge/160/160" width="160" height="160" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-panel/160/160" width="160" height="160" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-transformer/160/160" width="160" height="160" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-cabinet/160/160" width="160" height="160" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-wiring/160/160" width="160" height="160" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-conduit/160/160" width="160" height="160" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-fence/160/160" width="160" height="160" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-site/160/160" width="160" height="160" loading="lazy" alt="" />
             </div>
             <div class="ps-bar">
-              <span style="font-size:.8rem;color:var(--muted-fg)">9 photos · 2 notes</span>
+              <span style="font-size:.8rem;color:var(--muted-fg)" class="mono">9 photos, 2 notes</span>
               <div class="ps-cam" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg>
               </div>
             </div>
           </div>
@@ -334,61 +445,67 @@
 
   <!-- STATS -->
   <div class="stats">
-    <div class="wrap stats-grid">
+    <div class="wrap stats-grid" data-reveal>
       <div class="stat"><div class="num">500+</div><div class="lbl">Inspection teams</div></div>
       <div class="stat"><div class="num">1.2M+</div><div class="lbl">Photos archived</div></div>
       <div class="stat"><div class="num">40k+</div><div class="lbl">Projects closed out</div></div>
       <div class="stat"><div class="num">90%</div><div class="lbl">Less time filing</div></div>
     </div>
+    <p class="wrap stats-note">No credit card required. Works fully offline in the field.</p>
   </div>
 
   <!-- FEATURES -->
   <section id="features">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow">Features</span>
+      <div class="sec-head" data-reveal>
         <h2>Everything a field crew needs, nothing they don't</h2>
         <p class="lead">From the first tap of the shutter to the lead's final approval, SnapSite keeps the whole job in one organized place.</p>
       </div>
-      <div class="features">
-        <article class="card">
-          <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div class="bento">
+        <article class="bento-tile t-photos" data-reveal style="--i:0">
+          <div class="ficon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
           <h3>GPS-tagged photo grouping</h3>
-          <p>Every photo is stamped with its location and automatically grouped into the right project the moment it's taken — no manual sorting back at the truck.</p>
-        </article>
-        <article class="card">
-          <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <h3>Workgroups with lead visibility</h3>
-          <p>Inspectors capture their own sites while the lead account sees everything — every inspector, every location — in one consolidated view.</p>
-        </article>
-        <article class="card">
-          <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51 8.59 10.49"/></svg></div>
-          <h3>Flexible photo sharing</h3>
-          <p>Share with the whole workgroup, hand-pick specific inspectors, or generate a public link for clients and contractors — you decide the audience.</p>
-        </article>
-        <article class="card">
-          <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></div>
-          <h3>Voice &amp; text notes + AI reports</h3>
-          <p>Add a voice or text note to any photo. SnapSite's AI drafts a clean inspection report from your notes — but nothing saves until the inspector reviews and approves it.</p>
-        </article>
-        <article class="card">
-          <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg></div>
-          <h3>Interactive map view</h3>
-          <p>See all active projects as pins on a map. Tap any pin to jump straight into that site's photos, notes, and status.</p>
-        </article>
-        <article class="card">
-          <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-          <h3>Complete &amp; approval workflow</h3>
-          <p>An inspector marks a project done; the lead approves a one-tap close-out that archives the photos to your destination and clears it off the active list.</p>
-        </article>
-      </div>
-      <div style="margin-top:22px;">
-        <article class="card" style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
-          <div class="ficon" style="margin:0;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
-          <div style="flex:1; min-width:240px;">
-            <h3>One-tap camera, always a thumb away</h3>
-            <p style="color:var(--muted-fg)">A persistent quick-access camera button means a new photo is one tap from anywhere in the app — captured, tagged, and filed before you've taken your hand off the wall.</p>
+          <p>Every photo is stamped with its location and grouped into the right project the moment it's taken. No manual sorting back at the truck.</p>
+          <div class="grid-photos" aria-hidden="true">
+            <img src="https://picsum.photos/seed/snapsite-tile-1/140/140" width="140" height="140" loading="lazy" alt="" />
+            <img src="https://picsum.photos/seed/snapsite-tile-2/140/140" width="140" height="140" loading="lazy" alt="" />
+            <img src="https://picsum.photos/seed/snapsite-tile-3/140/140" width="140" height="140" loading="lazy" alt="" />
           </div>
+        </article>
+        <article class="bento-tile t-map" data-reveal style="--i:1">
+          <span class="mappin active" style="top:36px;left:40px;background:var(--accent);color:var(--accent)"></span>
+          <span class="mappin" style="top:74px;left:130px;background:var(--navy);color:var(--navy)"></span>
+          <span class="mappin" style="top:100px;left:60px;background:var(--warn);color:var(--warn)"></span>
+          <div style="margin-top:auto;">
+            <div class="ficon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg></div>
+            <h3>Interactive map view</h3>
+            <p>See every active project as a pin on the map. Tap one to jump straight into its photos, notes, and status.</p>
+          </div>
+        </article>
+        <article class="bento-tile t-work" data-reveal style="--i:2">
+          <div class="ficon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <h3>Workgroups with lead visibility</h3>
+          <p>Inspectors capture their own sites while the lead account sees every inspector and every location in one consolidated view.</p>
+        </article>
+        <article class="bento-tile t-share" data-reveal style="--i:3">
+          <div class="ficon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51 8.59 10.49"/></svg></div>
+          <h3>Flexible photo sharing</h3>
+          <p>Share with the whole workgroup, hand-pick specific inspectors, or generate a public link. You decide who sees it.</p>
+        </article>
+        <article class="bento-tile t-ai" data-reveal style="--i:4">
+          <div class="ficon" style="background:rgba(255,255,255,.5)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></div>
+          <h3>Voice &amp; text notes, plus AI reports</h3>
+          <p>Add a voice or text note to any photo. SnapSite's AI drafts a clean inspection report from your notes, but nothing saves until you review and approve it.</p>
+        </article>
+        <article class="bento-tile t-approve" data-reveal style="--i:5">
+          <div class="ficon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <h3>Complete &amp; approval workflow</h3>
+          <p>An inspector marks a project done. The lead approves a one-tap close-out that archives the photos and clears it off the active list.</p>
+        </article>
+        <article class="bento-tile t-camera" data-reveal style="--i:6">
+          <div class="ficon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+          <h3>One-tap camera, always a thumb away</h3>
+          <p>A persistent camera button means a new photo is one tap away, captured, tagged, and filed before you take your hand off the wall.</p>
         </article>
       </div>
     </div>
@@ -397,27 +514,26 @@
   <!-- HOW IT WORKS -->
   <section id="how" class="how">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow">How it works</span>
+      <div class="sec-head" data-reveal>
         <h2>From shutter to sign-off in four steps</h2>
       </div>
-      <div class="steps">
-        <div class="step">
+      <div class="timeline">
+        <div class="step" data-reveal style="--i:0">
           <div class="n">1</div>
           <h3>Snap on site</h3>
           <p>Tap the camera. Photos are GPS-tagged and dropped into the matching project automatically.</p>
         </div>
-        <div class="step">
+        <div class="step" data-reveal style="--i:1">
           <div class="n">2</div>
           <h3>Annotate &amp; draft</h3>
           <p>Add voice or text notes. AI drafts the report; the inspector reviews and approves before anything is saved.</p>
         </div>
-        <div class="step">
+        <div class="step" data-reveal style="--i:2">
           <div class="n">3</div>
           <h3>Share &amp; review</h3>
           <p>Share with the workgroup, specific inspectors, or a public link. The lead tracks every site from the map.</p>
         </div>
-        <div class="step">
+        <div class="step" data-reveal style="--i:3">
           <div class="n">4</div>
           <h3>Close it out</h3>
           <p>Inspector marks it done, lead approves the one-tap close-out, and photos archive to your destination.</p>
@@ -429,48 +545,58 @@
   <!-- PREVIEW -->
   <section id="preview">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow">Preview</span>
+      <div class="sec-head" data-reveal>
         <h2>A look inside SnapSite</h2>
-        <p class="lead">Map view, project galleries, and AI-assisted notes — built for gloved hands and bright sun.</p>
+        <p class="lead">Map view, project galleries, and AI-assisted notes, built for gloved hands and bright sun.</p>
       </div>
-      <div class="shots">
-        <div class="shot">
-          <div class="shot-top"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/></svg> Map view</div>
-          <div class="shot-body">
-            <div class="map-bg">
-              <span class="mappin" style="top:60px;left:70px;background:var(--primary)"></span>
-              <span class="mappin" style="top:130px;left:180px;background:var(--accent)"></span>
-              <span class="mappin" style="top:200px;left:90px;background:var(--secondary)"></span>
-              <span class="mappin" style="top:90px;left:230px;background:var(--destructive)"></span>
+      <div class="showcase" data-reveal>
+        <div class="showcase-tabs" role="tablist" aria-label="SnapSite preview">
+          <button class="showcase-tab active" role="tab" aria-selected="true" aria-controls="panel-map" id="tab-map" data-tab="map">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/></svg>
+            Map view
+          </button>
+          <button class="showcase-tab" role="tab" aria-selected="false" aria-controls="panel-gallery" id="tab-gallery" data-tab="gallery">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L7 19"/></svg>
+            Project gallery
+          </button>
+          <button class="showcase-tab" role="tab" aria-selected="false" aria-controls="panel-notes" id="tab-notes" data-tab="notes">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+            Notes &amp; AI draft
+          </button>
+        </div>
+        <div class="showcase-body">
+          <div class="showcase-panel" id="panel-map" role="tabpanel" aria-labelledby="tab-map" data-panel="map">
+            <div class="map-bg" aria-hidden="true">
+              <span class="mappin active" style="top:60px;left:70px;background:var(--accent);color:var(--accent)"></span>
+              <span class="mappin" style="top:130px;left:200px;background:var(--navy);color:var(--navy)"></span>
+              <span class="mappin" style="top:210px;left:100px;background:var(--warn);color:var(--warn)"></span>
+              <span class="mappin" style="top:90px;left:280px;background:var(--danger);color:var(--danger)"></span>
             </div>
           </div>
-        </div>
-        <div class="shot">
-          <div class="shot-top"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.6-3.6a2 2 0 0 0-2.8 0L7 19"/></svg> Project gallery</div>
-          <div class="shot-body">
+          <div class="showcase-panel" id="panel-gallery" role="tabpanel" aria-labelledby="tab-gallery" data-panel="gallery" hidden>
             <div class="grid-photos">
-              <div class="pin"></div><div class="pin2"></div><div class="pin3"></div>
-              <div class="pin3"></div><div class="pin"></div><div class="pin2"></div>
-              <div class="pin2"></div><div class="pin3"></div><div class="pin"></div>
-              <div class="pin"></div><div class="pin2"></div><div class="pin3"></div>
+              <img src="https://picsum.photos/seed/snapsite-gal-1/200/200" width="200" height="200" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-gal-2/200/200" width="200" height="200" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-gal-3/200/200" width="200" height="200" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-gal-4/200/200" width="200" height="200" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-gal-5/200/200" width="200" height="200" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-gal-6/200/200" width="200" height="200" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-gal-7/200/200" width="200" height="200" loading="lazy" alt="" />
+              <img src="https://picsum.photos/seed/snapsite-gal-8/200/200" width="200" height="200" loading="lazy" alt="" />
             </div>
           </div>
-        </div>
-        <div class="shot">
-          <div class="shot-top"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg> Notes &amp; AI draft</div>
-          <div class="shot-body">
+          <div class="showcase-panel" id="panel-notes" role="tabpanel" aria-labelledby="tab-notes" data-panel="notes" hidden>
             <div class="note-row">
-              <div class="note-thumb pin"></div>
-              <div><div class="ai-chip">AI draft · needs approval</div><p>"Corrosion on lower bracket, recommend replacement within 30 days."</p></div>
+              <img class="note-thumb" src="https://picsum.photos/seed/snapsite-note-1/92/92" width="46" height="46" loading="lazy" alt="" />
+              <div><span class="status-chip pending">Needs approval</span><p>Corrosion on lower bracket, recommend replacement within 30 days.</p></div>
             </div>
             <div class="note-row">
-              <div class="note-thumb pin2"></div>
-              <div><div class="ai-chip">Voice note · 0:14</div><p>Transformer reading nominal, gauge photographed for record.</p></div>
+              <img class="note-thumb" src="https://picsum.photos/seed/snapsite-note-2/92/92" width="46" height="46" loading="lazy" alt="" />
+              <div><span class="status-chip neutral">Voice note, 0:14</span><p>Transformer reading nominal, gauge photographed for record.</p></div>
             </div>
-            <div class="note-row" style="border:none;">
-              <div class="note-thumb pin3"></div>
-              <div><div class="ai-chip">AI draft · approved</div><p>Access panel secured, no further action required.</p></div>
+            <div class="note-row">
+              <img class="note-thumb" src="https://picsum.photos/seed/snapsite-note-3/92/92" width="46" height="46" loading="lazy" alt="" />
+              <div><span class="status-chip approved">Approved</span><p>Access panel secured, no further action required.</p></div>
             </div>
           </div>
         </div>
@@ -481,20 +607,19 @@
   <!-- AI REPORT DRAFTING DEMO -->
   <section id="ai-reports" class="demo">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow">AI report drafting</span>
+      <div class="sec-head" data-reveal>
         <h2>Turn rough field notes into a clean report</h2>
-        <p class="lead">Paste the kind of quick note an inspector would dictate on site. SnapSite's AI drafts the report — then waits for approval, exactly like it does in the app.</p>
+        <p class="lead">Paste the kind of quick note an inspector would dictate on site. SnapSite's AI drafts the report, then waits for approval, exactly like it does in the app.</p>
       </div>
-      <div class="demo-grid">
+      <div class="demo-grid" data-reveal>
         <div class="demo-panel">
           <div class="demo-panel-top">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg>
             Field notes
           </div>
           <div class="demo-body">
             <label class="demo-label" for="demo-loc">Project location (optional)</label>
-            <input class="demo-input" id="demo-loc" type="text" placeholder="Substation 14 — Riverside" value="Substation 14 — Riverside" />
+            <input class="demo-input" id="demo-loc" type="text" placeholder="Substation 14, Riverside" value="Substation 14, Riverside" />
             <label class="demo-label" for="demo-notes" style="margin-top:16px;">What you saw on site</label>
             <textarea class="demo-textarea" id="demo-notes" placeholder="e.g. lower bracket on transformer 3 has surface rust, maybe an eighth inch. gauge reads 42 psi looks normal. access panel screws loose, tightened two of them. photographed all.">lower bracket on transformer 3 has surface rust, maybe an eighth inch deep. gauge reads 42 psi looks normal. access panel screws were loose, tightened two of them. photographed all three.</textarea>
             <div class="demo-actions">
@@ -509,7 +634,7 @@
 
         <div class="demo-panel">
           <div class="demo-panel-top">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
             AI draft
           </div>
           <div class="demo-body">
@@ -535,28 +660,27 @@
   <!-- PRICING -->
   <section id="pricing" class="how">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow">Pricing</span>
+      <div class="sec-head" data-reveal>
         <h2>Plans that scale with your crew</h2>
         <p class="lead">Start free as a solo inspector, grow into a full workgroup, or run the whole organization.</p>
       </div>
-      <div class="pricing">
+      <div class="pricing" data-reveal>
         <div class="plan">
           <h3>Inspector</h3>
           <div class="price">$0<span> / mo</span></div>
-          <p style="color:var(--muted-fg); font-size:.92rem;">For solo field inspectors getting organized.</p>
+          <p class="desc">For solo field inspectors getting organized.</p>
           <ul>
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> GPS-tagged photo grouping</li>
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Voice &amp; text notes</li>
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Up to 3 active projects</li>
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Public link sharing</li>
           </ul>
-          <a class="btn btn-ghost" href="#download">Get started</a>
+          <a class="btn btn-ghost" href="#download">Get the app</a>
         </div>
         <div class="plan pop">
           <h3>Team</h3>
           <div class="price">$29<span> / inspector / mo</span></div>
-          <p style="color:var(--muted-fg); font-size:.92rem;">For workgroups that need lead oversight.</p>
+          <p class="desc">For workgroups that need lead oversight.</p>
           <ul>
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Everything in Inspector</li>
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Workgroups + lead visibility</li>
@@ -569,7 +693,7 @@
         <div class="plan">
           <h3>Enterprise</h3>
           <div class="price">Custom</div>
-          <p style="color:var(--muted-fg); font-size:.92rem;">For organizations with many crews.</p>
+          <p class="desc">For organizations with many crews.</p>
           <ul>
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Everything in Team</li>
             <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Custom archive destinations</li>
@@ -585,24 +709,33 @@
   <!-- TESTIMONIALS -->
   <section>
     <div class="wrap">
-      <div class="sec-head">
-        <span class="eyebrow">Testimonials</span>
-        <h2>Trusted by crews in the field</h2>
+      <div class="quote-row" data-reveal>
+        <div class="sec-head left">
+          <h2>Trusted by crews in the field</h2>
+        </div>
+        <div class="carousel-nav">
+          <button class="carousel-btn" id="quote-prev" aria-label="Previous testimonial">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="carousel-btn" id="quote-next" aria-label="Next testimonial">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="tests">
+      <div class="quote-track" id="quote-track" data-reveal>
         <figure class="quote">
           <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
-          <p>"We used to lose an hour a day sorting photos by job. Now they're filed by location before I'm back in the truck. The close-out approval is a game-changer for our leads."</p>
+          <p>"We used to lose an hour a day sorting photos by job. Now they're filed by location before I'm back in the truck."</p>
           <figcaption class="who"><span class="avatar">DM</span><span><span class="nm">Darnell Mills</span><br><span class="rl">Utility Inspector, GridLine Services</span></span></figcaption>
         </figure>
         <figure class="quote">
           <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
-          <p>"The AI report draft saves me from typing on a phone in the rain — but it still waits for my approval, so nothing wrong ever gets logged. That balance is exactly right."</p>
+          <p>"The AI report draft saves me from typing on a phone in the rain. It still waits for my approval, so nothing wrong ever gets logged."</p>
           <figcaption class="who"><span class="avatar">RC</span><span><span class="nm">Rosa Castillo</span><br><span class="rl">Lead Inspector, Meridian Construction</span></span></figcaption>
         </figure>
         <figure class="quote">
           <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
-          <p>"As the workgroup lead I can finally see every site my crew is on from one map. One tap closes a project and archives everything. Audits take minutes now."</p>
+          <p>"As the workgroup lead, I can finally see every site my crew is on from one map. One tap closes a project and archives everything."</p>
           <figcaption class="who"><span class="avatar">TN</span><span><span class="nm">Tom Nguyen</span><br><span class="rl">Operations Lead, Summit Utilities</span></span></figcaption>
         </figure>
       </div>
@@ -612,7 +745,7 @@
   <!-- CTA / DOWNLOAD -->
   <section id="download" style="padding-bottom:0;">
     <div class="wrap">
-      <div class="cta-band">
+      <div class="cta-band" data-reveal>
         <h2>Get your crew organized today</h2>
         <p>Join 500+ inspection teams capturing, annotating, and closing out projects with SnapSite. Free for solo inspectors.</p>
         <div class="badges">
@@ -634,7 +767,7 @@
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a href="#top" class="brand"><span class="brand-mark" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>SnapSite</a>
+        <a href="#top" class="brand"><span class="brand-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>SnapSite</a>
         <p style="margin-top:14px; color:#94a3b8; font-size:.92rem; max-width:280px;">Field photo organization for construction and utility inspection teams.</p>
       </div>
       <div>
@@ -686,6 +819,56 @@
     });
   }
 
+  // Scroll-reveal for section headers, bento tiles, steps, and cards.
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var revealTargets = document.querySelectorAll("[data-reveal]");
+  if (revealTargets.length) {
+    if (!reduceMotion && "IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+      revealTargets.forEach(function (t) { io.observe(t); });
+    } else {
+      revealTargets.forEach(function (t) { t.classList.add("is-visible"); });
+    }
+  }
+
+  // Preview showcase tabs.
+  var tabBtns = document.querySelectorAll(".showcase-tab");
+  var tabPanels = document.querySelectorAll(".showcase-panel");
+  tabBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var target = btn.getAttribute("data-tab");
+      tabBtns.forEach(function (b) {
+        var active = b === btn;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      tabPanels.forEach(function (p) {
+        p.hidden = p.getAttribute("data-panel") !== target;
+      });
+    });
+  });
+
+  // Testimonial carousel controls.
+  var quoteTrack = document.getElementById("quote-track");
+  var quotePrev = document.getElementById("quote-prev");
+  var quoteNext = document.getElementById("quote-next");
+  if (quoteTrack && quotePrev && quoteNext) {
+    var scrollByCard = function (dir) {
+      var card = quoteTrack.querySelector(".quote");
+      var amount = card ? card.getBoundingClientRect().width + 20 : 320;
+      quoteTrack.scrollBy({ left: dir * amount, behavior: reduceMotion ? "auto" : "smooth" });
+    };
+    quotePrev.addEventListener("click", function () { scrollByCard(-1); });
+    quoteNext.addEventListener("click", function () { scrollByCard(1); });
+  }
+
   var runBtn = document.getElementById("demo-run");
   var notesEl = document.getElementById("demo-notes");
   var locEl = document.getElementById("demo-loc");
@@ -734,21 +917,21 @@
   var DRAFT_BANNER =
     '<div class="draft-banner">' +
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>' +
-    'AI draft · needs approval</div>';
+    'AI draft, needs approval</div>';
 
   var SAMPLE_DRAFT =
     "## Summary\n" +
     "Routine inspection of **Transformer 3**. Minor surface corrosion and loose access-panel hardware noted; pressure reading within normal range. All items photographed.\n\n" +
     "## Observations\n" +
     "- Lower mounting bracket shows surface rust, approx. 1/8\" deep.\n" +
-    "- Pressure gauge reads 42 psi — within normal operating range.\n" +
+    "- Pressure gauge reads 42 psi, within normal operating range.\n" +
     "- Access panel screws found loose; two were tightened on site.\n\n" +
     "## Recommended Actions\n" +
     "- Monitor bracket corrosion; schedule treatment or replacement if it progresses.\n" +
     "- Re-torque remaining access-panel fasteners on next visit.\n\n" +
     "## Items to confirm\n" +
     "- Total number of access-panel screws and how many remain loose.\n\n" +
-    "_Demo draft — connect the report API (server/) for live output._";
+    "_Demo draft. Connect the report API (server/) for live output._";
 
   function paint(text) {
     outEl.innerHTML = DRAFT_BANNER + render(text);
@@ -827,8 +1010,8 @@
         return pump();
       })
       .catch(function () {
-        // Backend truly unreachable (e.g. static preview with no server running)
-        // — reveal a representative draft, per the documented fallback behavior.
+        // Backend truly unreachable (e.g. static preview with no server running).
+        // Reveal a representative draft, per the documented fallback behavior.
         typeOut(SAMPLE_DRAFT);
       });
   }

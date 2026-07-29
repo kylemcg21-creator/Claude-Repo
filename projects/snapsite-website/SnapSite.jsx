@@ -52,12 +52,12 @@ const PlayLogo = () => (
 
 /* ── Data ──────────────────────────────────────────────────────────────── */
 const FEATURES = [
-  { icon: PinIcon, title: "GPS-tagged photo grouping", body: "Every photo is stamped with its location and automatically grouped into the right project the moment it's taken — no manual sorting back at the truck." },
-  { icon: UsersIcon, title: "Workgroups with lead visibility", body: "Inspectors capture their own sites while the lead account sees everything — every inspector, every location — in one consolidated view." },
-  { icon: ShareIcon, title: "Flexible photo sharing", body: "Share with the whole workgroup, hand-pick specific inspectors, or generate a public link for clients and contractors — you decide the audience." },
-  { icon: MicIcon, title: "Voice & text notes + AI reports", body: "Add a voice or text note to any photo. SnapSite's AI drafts a clean inspection report from your notes — but nothing saves until the inspector reviews and approves it." },
+  { icon: PinIcon, title: "GPS-tagged photo grouping", body: "Every photo is stamped with its location and grouped into the right project the moment it's taken. No manual sorting back at the truck." },
+  { icon: UsersIcon, title: "Workgroups with lead visibility", body: "Inspectors capture their own sites while the lead account sees every inspector and every location in one consolidated view." },
+  { icon: ShareIcon, title: "Flexible photo sharing", body: "Share with the whole workgroup, hand-pick specific inspectors, or generate a public link. You decide who sees it." },
+  { icon: MicIcon, title: "Voice & text notes, plus AI reports", body: "Add a voice or text note to any photo. SnapSite's AI drafts a clean inspection report from your notes, but nothing saves until you review and approve it." },
   { icon: MapIcon, title: "Interactive map view", body: "See all active projects as pins on a map. Tap any pin to jump straight into that site's photos, notes, and status." },
-  { icon: CheckSquareIcon, title: "Complete & approval workflow", body: "An inspector marks a project done; the lead approves a one-tap close-out that archives the photos to your destination and clears it off the active list." },
+  { icon: CheckSquareIcon, title: "Complete & approval workflow", body: "An inspector marks a project done. The lead approves a one-tap close-out that archives the photos and clears it off the active list." },
 ];
 
 const STEPS = [
@@ -82,9 +82,9 @@ const PLANS = [
 ];
 
 const TESTIMONIALS = [
-  { initials: "DM", quote: "We used to lose an hour a day sorting photos by job. Now they're filed by location before I'm back in the truck. The close-out approval is a game-changer for our leads.", name: "Darnell Mills", role: "Utility Inspector, GridLine Services" },
-  { initials: "RC", quote: "The AI report draft saves me from typing on a phone in the rain — but it still waits for my approval, so nothing wrong ever gets logged. That balance is exactly right.", name: "Rosa Castillo", role: "Lead Inspector, Meridian Construction" },
-  { initials: "TN", quote: "As the workgroup lead I can finally see every site my crew is on from one map. One tap closes a project and archives everything. Audits take minutes now.", name: "Tom Nguyen", role: "Operations Lead, Summit Utilities" },
+  { initials: "DM", quote: "We used to lose an hour a day sorting photos by job. Now they're filed by location before I'm back in the truck.", name: "Darnell Mills", role: "Utility Inspector, GridLine Services" },
+  { initials: "RC", quote: "The AI report draft saves me from typing on a phone in the rain. It still waits for my approval, so nothing wrong ever gets logged.", name: "Rosa Castillo", role: "Lead Inspector, Meridian Construction" },
+  { initials: "TN", quote: "As the workgroup lead, I can finally see every site my crew is on from one map. One tap closes a project and archives everything.", name: "Tom Nguyen", role: "Operations Lead, Summit Utilities" },
 ];
 
 const PINS = ["pin", "pin2", "pin3"];
@@ -96,14 +96,14 @@ const SAMPLE_DRAFT =
   "Routine inspection of **Transformer 3**. Minor surface corrosion and loose access-panel hardware noted; pressure reading within normal range. All items photographed.\n\n" +
   "## Observations\n" +
   "- Lower mounting bracket shows surface rust, approx. 1/8\" deep.\n" +
-  "- Pressure gauge reads 42 psi — within normal operating range.\n" +
+  "- Pressure gauge reads 42 psi, within normal operating range.\n" +
   "- Access panel screws found loose; two were tightened on site.\n\n" +
   "## Recommended Actions\n" +
   "- Monitor bracket corrosion; schedule treatment or replacement if it progresses.\n" +
   "- Re-torque remaining access-panel fasteners on next visit.\n\n" +
   "## Items to confirm\n" +
   "- Total number of access-panel screws and how many remain loose.\n\n" +
-  "_Demo draft — connect the report API (server/) for live output._";
+  "_Demo draft. Connect the report API (server/) for live output._";
 
 // Minimal, safe Markdown-ish renderer for headings, bold and bullet lists.
 function renderMarkdown(md) {
@@ -130,7 +130,7 @@ function renderMarkdown(md) {
 }
 
 function ReportDemo() {
-  const [location, setLocation] = React.useState("Substation 14 — Riverside");
+  const [location, setLocation] = React.useState("Substation 14, Riverside");
   const [notes, setNotes] = React.useState(
     "lower bracket on transformer 3 has surface rust, maybe an eighth inch deep. gauge reads 42 psi looks normal. access panel screws were loose, tightened two of them. photographed all three."
   );
@@ -186,7 +186,7 @@ function ReportDemo() {
       setPhase("done");
     } catch {
       // Backend truly unreachable (e.g. static preview with no server running)
-      // — reveal a representative draft, per the documented fallback behavior.
+      // Reveal a representative draft, per the documented fallback behavior.
       await typeOut(SAMPLE_DRAFT, setDraft);
       setPhase("done");
     }
@@ -198,14 +198,14 @@ function ReportDemo() {
         <div className="sec-head">
           <span className="eyebrow">AI report drafting</span>
           <h2>Turn rough field notes into a clean report</h2>
-          <p className="lead">Paste the kind of quick note an inspector would dictate on site. SnapSite's AI drafts the report — then waits for approval, exactly like it does in the app.</p>
+          <p className="lead">Paste the kind of quick note an inspector would dictate on site. SnapSite's AI drafts the report, then waits for approval, exactly like it does in the app.</p>
         </div>
         <div className="demo-grid">
           <div className="demo-panel">
             <div className="demo-panel-top"><MicIcon size={18} style={{ color: "var(--primary)" }} /> Field notes</div>
             <div className="demo-body">
               <label className="demo-label" htmlFor="demo-loc">Project location (optional)</label>
-              <input className="demo-input" id="demo-loc" type="text" placeholder="Substation 14 — Riverside"
+              <input className="demo-input" id="demo-loc" type="text" placeholder="Substation 14, Riverside"
                 value={location} onChange={(e) => setLocation(e.target.value)} />
               <label className="demo-label" htmlFor="demo-notes" style={{ marginTop: 16 }}>What you saw on site</label>
               <textarea className="demo-textarea" id="demo-notes" ref={notesRef}
@@ -327,7 +327,7 @@ export default function SnapSite() {
                 <div className="phone-screen">
                   <div className="ps-top">
                     <small>Active project</small>
-                    <div className="loc"><PinIcon size={16} /> Substation 14 — Riverside</div>
+                    <div className="loc"><PinIcon size={16} /> Substation 14, Riverside</div>
                   </div>
                   <div className="ps-photos">{photoTiles(9)}</div>
                   <div className="ps-bar">
@@ -371,7 +371,7 @@ export default function SnapSite() {
                 <div className="ficon" style={{ margin: 0 }}><CameraIcon size={24} /></div>
                 <div style={{ flex: 1, minWidth: 240 }}>
                   <h3>One-tap camera, always a thumb away</h3>
-                  <p style={{ color: "var(--muted-fg)" }}>A persistent quick-access camera button means a new photo is one tap from anywhere in the app — captured, tagged, and filed before you've taken your hand off the wall.</p>
+                  <p style={{ color: "var(--muted-fg)" }}>A persistent camera button means a new photo is one tap away, captured, tagged, and filed before you take your hand off the wall.</p>
                 </div>
               </article>
             </div>
@@ -403,7 +403,7 @@ export default function SnapSite() {
             <div className="sec-head">
               <span className="eyebrow">Preview</span>
               <h2>A look inside SnapSite</h2>
-              <p className="lead">Map view, project galleries, and AI-assisted notes — built for gloved hands and bright sun.</p>
+              <p className="lead">Map view, project galleries, and AI-assisted notes, built for gloved hands and bright sun.</p>
             </div>
             <div className="shots">
               <div className="shot">
