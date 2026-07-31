@@ -126,6 +126,18 @@ describe("POST /api/draft-report", () => {
     assert.equal(client.calls.length, 0);
   });
 
+  test("returns a JSON error body for oversized requests instead of the default HTML error page", async () => {
+    const client = createMockClient();
+    const app = createApp(client);
+    const oversizedNotes = "x".repeat(70 * 1024);
+
+    const res = await request(app).post("/api/draft-report").send({ notes: oversizedNotes });
+
+    assert.equal(res.status, 413);
+    assert.match(res.headers["content-type"], /^application\/json/);
+    assert.deepEqual(res.body, { error: "Field notes are too long. Please shorten them and try again." });
+  });
+
   test("handles upstream API errors gracefully without throwing", async () => {
     const client = createMockClient({ fail: true });
     const app = createApp(client);

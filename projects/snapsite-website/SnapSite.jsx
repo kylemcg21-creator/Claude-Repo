@@ -43,6 +43,8 @@ const RefreshIcon = (p) => (
 const AlertIcon = (p) => (
   <Icon {...p}><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></Icon>
 );
+const ChevronLeftIcon = (p) => (<Icon {...p}><path d="m15 18-6-6 6-6" /></Icon>);
+const ChevronRightIcon = (p) => (<Icon {...p}><path d="m9 18 6-6-6-6" /></Icon>);
 const AppleLogo = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M16.5 1.5c.1 1-.3 2-1 2.8-.7.8-1.8 1.4-2.8 1.3-.1-1 .4-2 1-2.7.7-.8 1.9-1.4 2.8-1.4ZM20 17.3c-.5 1.2-.8 1.7-1.5 2.7-1 1.4-2.3 3.1-4 3.1-1.5 0-1.9-1-3.9-1-2 0-2.4 1-3.9 1-1.7 0-2.9-1.6-3.9-2.9C.1 17.4-.4 12.8 1.3 10c1-1.6 2.6-2.6 4.1-2.6 1.6 0 2.6 1 3.9 1 1.3 0 2-1 3.9-1 1.4 0 2.9.8 4 2.1-3.5 1.9-2.9 6.9 1 7.8Z" /></svg>
 );
@@ -50,16 +52,36 @@ const PlayLogo = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="#34A853" d="M3.6 21c.3.2.7.2 1.1 0l9-5.2-2.5-2.5L3.6 21Z" /><path fill="#FBBC04" d="m17 11.3-2.8-1.6-2.7 2.7 2.7 2.7L17 13.5c.8-.5.8-1.7 0-2.2Z" /><path fill="#4285F4" d="M3.4 3c-.1.2-.2.5-.2.8v16.4c0 .3.1.6.2.8l8.4-9-8.4-9Z" /><path fill="#EA4335" d="M3.6 3c.3-.2.7-.2 1.1 0l7.6 4.4-2.5 2.5L3.6 3Z" /></svg>
 );
 
-/* ── Data ──────────────────────────────────────────────────────────────── */
-const FEATURES = [
-  { icon: PinIcon, title: "GPS-tagged photo grouping", body: "Every photo is stamped with its location and automatically grouped into the right project the moment it's taken — no manual sorting back at the truck." },
-  { icon: UsersIcon, title: "Workgroups with lead visibility", body: "Inspectors capture their own sites while the lead account sees everything — every inspector, every location — in one consolidated view." },
-  { icon: ShareIcon, title: "Flexible photo sharing", body: "Share with the whole workgroup, hand-pick specific inspectors, or generate a public link for clients and contractors — you decide the audience." },
-  { icon: MicIcon, title: "Voice & text notes + AI reports", body: "Add a voice or text note to any photo. SnapSite's AI drafts a clean inspection report from your notes — but nothing saves until the inspector reviews and approves it." },
-  { icon: MapIcon, title: "Interactive map view", body: "See all active projects as pins on a map. Tap any pin to jump straight into that site's photos, notes, and status." },
-  { icon: CheckSquareIcon, title: "Complete & approval workflow", body: "An inspector marks a project done; the lead approves a one-tap close-out that archives the photos to your destination and clears it off the active list." },
-];
+/* ── Scroll-reveal wrapper (IntersectionObserver, respects reduced motion) ─ */
+const Reveal = React.forwardRef(function Reveal({ as: Tag = "div", index = 0, className = "", children, ...rest }, forwardedRef) {
+  const innerRef = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+  React.useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !("IntersectionObserver" in window)) { setVisible(true); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) { setVisible(true); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const setRefs = (node) => {
+    innerRef.current = node;
+    if (typeof forwardedRef === "function") forwardedRef(node);
+    else if (forwardedRef) forwardedRef.current = node;
+  };
+  return (
+    <Tag ref={setRefs} className={`reveal${visible ? " is-visible" : ""}${className ? " " + className : ""}`} style={{ "--i": index }} {...rest}>
+      {children}
+    </Tag>
+  );
+});
 
+/* ── Data ──────────────────────────────────────────────────────────────── */
 const STEPS = [
   { n: 1, title: "Snap on site", body: "Tap the camera. Photos are GPS-tagged and dropped into the matching project automatically." },
   { n: 2, title: "Annotate & draft", body: "Add voice or text notes. AI drafts the report; the inspector reviews and approves before anything is saved." },
@@ -73,7 +95,7 @@ const STATS = [
 ];
 
 const PLANS = [
-  { name: "Inspector", price: "$0", per: " / mo", note: "For solo field inspectors getting organized.", cta: "Get started", primary: false,
+  { name: "Inspector", price: "$0", per: " / mo", note: "For solo field inspectors getting organized.", cta: "Get the app", primary: false,
     features: ["GPS-tagged photo grouping", "Voice & text notes", "Up to 3 active projects", "Public link sharing"] },
   { name: "Team", price: "$29", per: " / inspector / mo", note: "For workgroups that need lead oversight.", cta: "Start free trial", primary: true, popular: true,
     features: ["Everything in Inspector", "Workgroups + lead visibility", "AI-assisted report drafting", "Approval & close-out workflow", "Unlimited active projects"] },
@@ -82,13 +104,16 @@ const PLANS = [
 ];
 
 const TESTIMONIALS = [
-  { initials: "DM", quote: "We used to lose an hour a day sorting photos by job. Now they're filed by location before I'm back in the truck. The close-out approval is a game-changer for our leads.", name: "Darnell Mills", role: "Utility Inspector, GridLine Services" },
-  { initials: "RC", quote: "The AI report draft saves me from typing on a phone in the rain — but it still waits for my approval, so nothing wrong ever gets logged. That balance is exactly right.", name: "Rosa Castillo", role: "Lead Inspector, Meridian Construction" },
-  { initials: "TN", quote: "As the workgroup lead I can finally see every site my crew is on from one map. One tap closes a project and archives everything. Audits take minutes now.", name: "Tom Nguyen", role: "Operations Lead, Summit Utilities" },
+  { initials: "DM", quote: "We used to lose an hour a day sorting photos by job. Now they're filed by location before I'm back in the truck.", name: "Darnell Mills", role: "Utility Inspector, GridLine Services" },
+  { initials: "RC", quote: "The AI report draft saves me from typing on a phone in the rain. It still waits for my approval, so nothing wrong ever gets logged.", name: "Rosa Castillo", role: "Lead Inspector, Meridian Construction" },
+  { initials: "TN", quote: "As the workgroup lead, I can finally see every site my crew is on from one map. One tap closes a project and archives everything.", name: "Tom Nguyen", role: "Operations Lead, Summit Utilities" },
 ];
 
-const PINS = ["pin", "pin2", "pin3"];
-const photoTiles = (n) => Array.from({ length: n }, (_, i) => <div key={i} className={PINS[i % 3]} />);
+const photoUrl = (seed, size = 200) => `https://picsum.photos/seed/snapsite-${seed}/${size}/${size}`;
+const photoTiles = (n, prefix, size = 200) =>
+  Array.from({ length: n }, (_, i) => (
+    <img key={i} src={photoUrl(`${prefix}-${i}`, size)} width={size} height={size} loading="lazy" alt="" />
+  ));
 
 /* ── AI report drafting demo ───────────────────────────────────────────── */
 const SAMPLE_DRAFT =
@@ -96,14 +121,14 @@ const SAMPLE_DRAFT =
   "Routine inspection of **Transformer 3**. Minor surface corrosion and loose access-panel hardware noted; pressure reading within normal range. All items photographed.\n\n" +
   "## Observations\n" +
   "- Lower mounting bracket shows surface rust, approx. 1/8\" deep.\n" +
-  "- Pressure gauge reads 42 psi — within normal operating range.\n" +
+  "- Pressure gauge reads 42 psi, within normal operating range.\n" +
   "- Access panel screws found loose; two were tightened on site.\n\n" +
   "## Recommended Actions\n" +
   "- Monitor bracket corrosion; schedule treatment or replacement if it progresses.\n" +
   "- Re-torque remaining access-panel fasteners on next visit.\n\n" +
   "## Items to confirm\n" +
   "- Total number of access-panel screws and how many remain loose.\n\n" +
-  "_Demo draft — connect the report API (server/) for live output._";
+  "_Demo draft. Connect the report API (server/) for live output._";
 
 // Minimal, safe Markdown-ish renderer for headings, bold and bullet lists.
 function renderMarkdown(md) {
@@ -130,12 +155,13 @@ function renderMarkdown(md) {
 }
 
 function ReportDemo() {
-  const [location, setLocation] = React.useState("Substation 14 — Riverside");
+  const [location, setLocation] = React.useState("Substation 14, Riverside");
   const [notes, setNotes] = React.useState(
     "lower bracket on transformer 3 has surface rust, maybe an eighth inch deep. gauge reads 42 psi looks normal. access panel screws were loose, tightened two of them. photographed all three."
   );
   const [draft, setDraft] = React.useState("");
-  const [phase, setPhase] = React.useState("idle"); // idle | loading | done | approved
+  const [phase, setPhase] = React.useState("idle"); // idle | loading | done | approved | error
+  const [errorMsg, setErrorMsg] = React.useState("");
   const notesRef = React.useRef(null);
 
   const busy = phase === "loading";
@@ -144,13 +170,22 @@ function ReportDemo() {
     if (!notes.trim()) { notesRef.current?.focus(); return; }
     setPhase("loading");
     setDraft("");
+    setErrorMsg("");
     try {
       const res = await fetch("/api/draft-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes: notes.trim(), location: location.trim() }),
       });
-      if (!res.ok || !res.body) throw new Error("bad status");
+      if (!res.body) throw new Error("no-response-body");
+      if (!res.ok) {
+        // Server is reachable but rejected the request (validation, size limit,
+        // upstream failure). Show the real reason instead of faking success.
+        const body = await res.json().catch(() => ({}));
+        setErrorMsg(body.error || "Could not draft the report. Please try again.");
+        setPhase("error");
+        return;
+      }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buf = "", acc = "";
@@ -166,12 +201,17 @@ function ReportDemo() {
           if (!dm) continue;
           const data = JSON.parse(dm[1]);
           if (ev === "delta") { acc += data.text; setDraft(acc); }
-          else if (ev === "error") throw new Error(data.error);
+          else if (ev === "error") {
+            setErrorMsg(data.error);
+            setPhase("error");
+            return;
+          }
         }
       }
       setPhase("done");
     } catch {
-      // Backend not running (static preview) — reveal a representative draft.
+      // Backend truly unreachable (e.g. static preview with no server running).
+      // Reveal a representative draft, per the documented fallback behavior.
       await typeOut(SAMPLE_DRAFT, setDraft);
       setPhase("done");
     }
@@ -180,17 +220,16 @@ function ReportDemo() {
   return (
     <section id="ai-reports" className="demo">
       <div className="wrap">
-        <div className="sec-head">
-          <span className="eyebrow">AI report drafting</span>
+        <Reveal className="sec-head">
           <h2>Turn rough field notes into a clean report</h2>
-          <p className="lead">Paste the kind of quick note an inspector would dictate on site. SnapSite's AI drafts the report — then waits for approval, exactly like it does in the app.</p>
-        </div>
-        <div className="demo-grid">
+          <p className="lead">Paste the kind of quick note an inspector would dictate on site. SnapSite's AI drafts the report, then waits for approval, exactly like it does in the app.</p>
+        </Reveal>
+        <Reveal as="div" className="demo-grid">
           <div className="demo-panel">
-            <div className="demo-panel-top"><MicIcon size={18} style={{ color: "var(--primary)" }} /> Field notes</div>
+            <div className="demo-panel-top"><MicIcon size={18} style={{ color: "var(--accent)" }} /> Field notes</div>
             <div className="demo-body">
               <label className="demo-label" htmlFor="demo-loc">Project location (optional)</label>
-              <input className="demo-input" id="demo-loc" type="text" placeholder="Substation 14 — Riverside"
+              <input className="demo-input" id="demo-loc" type="text" placeholder="Substation 14, Riverside"
                 value={location} onChange={(e) => setLocation(e.target.value)} />
               <label className="demo-label" htmlFor="demo-notes" style={{ marginTop: 16 }}>What you saw on site</label>
               <textarea className="demo-textarea" id="demo-notes" ref={notesRef}
@@ -205,15 +244,17 @@ function ReportDemo() {
           </div>
 
           <div className="demo-panel">
-            <div className="demo-panel-top"><FileIcon size={18} style={{ color: "var(--secondary)" }} /> AI draft</div>
+            <div className="demo-panel-top"><FileIcon size={18} style={{ color: "var(--accent)" }} /> AI draft</div>
             <div className="demo-body">
               <div className="demo-out" aria-live="polite" aria-busy={busy}>
-                {draft ? (
+                {phase === "error" ? (
+                  <span className="placeholder">{errorMsg}</span>
+                ) : draft ? (
                   <>
                     <div className={`draft-banner${phase === "approved" ? " approved" : ""}`}>
                       {phase === "approved"
                         ? <><CheckIcon size={14} strokeWidth={2.5} /> Approved &amp; saved to project</>
-                        : <><AlertIcon size={14} strokeWidth={2.5} /> AI draft · needs approval</>}
+                        : <><AlertIcon size={14} strokeWidth={2.5} /> AI draft, needs approval</>}
                     </div>
                     <div dangerouslySetInnerHTML={{ __html: renderMarkdown(draft) }} />
                   </>
@@ -239,7 +280,7 @@ function ReportDemo() {
               )}
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -259,6 +300,100 @@ function typeOut(text, setDraft) {
   });
 }
 
+/* ── Preview: tabbed showcase ─────────────────────────────────────────── */
+function PreviewShowcase() {
+  const [tab, setTab] = React.useState("map");
+  const tabs = [
+    { id: "map", label: "Map view", icon: MapIcon },
+    { id: "gallery", label: "Project gallery", icon: ImageIcon },
+    { id: "notes", label: "Notes & AI draft", icon: MicIcon },
+  ];
+  return (
+    <Reveal as="div" className="showcase">
+      <div className="showcase-tabs" role="tablist" aria-label="SnapSite preview">
+        {tabs.map(({ id, label, icon: I }) => (
+          <button
+            key={id}
+            className={`showcase-tab${tab === id ? " active" : ""}`}
+            role="tab"
+            aria-selected={tab === id}
+            aria-controls={`panel-${id}`}
+            id={`tab-${id}`}
+            onClick={() => setTab(id)}
+          >
+            <I size={16} /> {label}
+          </button>
+        ))}
+      </div>
+      <div className="showcase-body">
+        <div className="showcase-panel" id="panel-map" role="tabpanel" aria-labelledby="tab-map" hidden={tab !== "map"}>
+          <div className="map-bg" aria-hidden="true">
+            <span className="mappin active" style={{ top: 60, left: 70, background: "var(--accent)", color: "var(--accent)" }} />
+            <span className="mappin" style={{ top: 130, left: 200, background: "var(--navy)", color: "var(--navy)" }} />
+            <span className="mappin" style={{ top: 210, left: 100, background: "var(--warn)", color: "var(--warn)" }} />
+            <span className="mappin" style={{ top: 90, left: 280, background: "var(--danger)", color: "var(--danger)" }} />
+          </div>
+        </div>
+        <div className="showcase-panel" id="panel-gallery" role="tabpanel" aria-labelledby="tab-gallery" hidden={tab !== "gallery"}>
+          <div className="grid-photos">{photoTiles(8, "gal")}</div>
+        </div>
+        <div className="showcase-panel" id="panel-notes" role="tabpanel" aria-labelledby="tab-notes" hidden={tab !== "notes"}>
+          <div className="note-row">
+            <img className="note-thumb" src={photoUrl("note-1", 92)} width={46} height={46} loading="lazy" alt="" />
+            <div><span className="status-chip pending">Needs approval</span><p>Corrosion on lower bracket, recommend replacement within 30 days.</p></div>
+          </div>
+          <div className="note-row">
+            <img className="note-thumb" src={photoUrl("note-2", 92)} width={46} height={46} loading="lazy" alt="" />
+            <div><span className="status-chip neutral">Voice note, 0:14</span><p>Transformer reading nominal, gauge photographed for record.</p></div>
+          </div>
+          <div className="note-row">
+            <img className="note-thumb" src={photoUrl("note-3", 92)} width={46} height={46} loading="lazy" alt="" />
+            <div><span className="status-chip approved">Approved</span><p>Access panel secured, no further action required.</p></div>
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ── Testimonials: scroll-snap carousel ───────────────────────────────── */
+function TestimonialCarousel() {
+  const trackRef = React.useRef(null);
+  const scrollByCard = (dir) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const card = track.querySelector(".quote");
+    const amount = card ? card.getBoundingClientRect().width + 20 : 320;
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    track.scrollBy({ left: dir * amount, behavior: reduce ? "auto" : "smooth" });
+  };
+  return (
+    <>
+      <Reveal as="div" className="quote-row">
+        <div className="sec-head left">
+          <h2>Trusted by crews in the field</h2>
+        </div>
+        <div className="carousel-nav">
+          <button className="carousel-btn" aria-label="Previous testimonial" onClick={() => scrollByCard(-1)}><ChevronLeftIcon size={18} /></button>
+          <button className="carousel-btn" aria-label="Next testimonial" onClick={() => scrollByCard(1)}><ChevronRightIcon size={18} /></button>
+        </div>
+      </Reveal>
+      <Reveal as="div" className="quote-track" ref={trackRef}>
+        {TESTIMONIALS.map((t) => (
+          <figure className="quote" key={t.initials}>
+            <div className="stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <p>"{t.quote}"</p>
+            <figcaption className="who">
+              <span className="avatar">{t.initials}</span>
+              <span><span className="nm">{t.name}</span><br /><span className="rl">{t.role}</span></span>
+            </figcaption>
+          </figure>
+        ))}
+      </Reveal>
+    </>
+  );
+}
+
 /* ── Component ─────────────────────────────────────────────────────────── */
 export default function SnapSite() {
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -270,7 +405,7 @@ export default function SnapSite() {
       <header className={menuOpen ? "nav-open" : undefined}>
         <div className="wrap nav">
           <a href="#top" className="brand" aria-label="SnapSite home">
-            <span className="brand-mark" aria-hidden="true"><CameraIcon size={20} /></span>
+            <span className="brand-mark" aria-hidden="true"><CameraIcon size={18} /></span>
             SnapSite
           </a>
           <nav className="nav-links" id="primary-nav" aria-label="Primary" onClick={closeMenu}>
@@ -283,7 +418,7 @@ export default function SnapSite() {
           </nav>
           <button className="menu-btn" onClick={() => setMenuOpen((o) => !o)}
             aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} aria-controls="primary-nav">
-            <MenuIcon size={26} />
+            <MenuIcon size={24} />
           </button>
         </div>
       </header>
@@ -295,14 +430,10 @@ export default function SnapSite() {
             <div>
               <span className="eyebrow"><PinIcon size={14} strokeWidth={2.5} /> Built for field inspection teams</span>
               <h1>Every field photo, organized by the site it came from.</h1>
-              <p className="lead">SnapSite auto-groups GPS-tagged photos by project location so construction and utility inspection crews capture, annotate, and close out work without the end-of-day file shuffle.</p>
+              <p className="lead">SnapSite auto-groups GPS-tagged photos by project location, so crews capture, annotate, and close out work without the end-of-day file shuffle.</p>
               <div className="hero-cta">
-                <a className="btn btn-primary" href="#download"><CameraIcon size={18} /> Start capturing free</a>
+                <a className="btn btn-primary" href="#download"><CameraIcon size={18} /> Get the app</a>
                 <a className="btn btn-ghost" href="#how">See how it works</a>
-              </div>
-              <div className="hero-meta">
-                <CheckIcon size={18} strokeWidth={2.5} style={{ color: "var(--accent)" }} />
-                No credit card · Works offline in the field
               </div>
             </div>
             <div aria-hidden="true">
@@ -310,12 +441,12 @@ export default function SnapSite() {
                 <div className="phone-screen">
                   <div className="ps-top">
                     <small>Active project</small>
-                    <div className="loc"><PinIcon size={16} /> Substation 14 — Riverside</div>
+                    <div className="loc"><PinIcon size={16} /> Substation 14, Riverside</div>
                   </div>
-                  <div className="ps-photos">{photoTiles(9)}</div>
+                  <div className="ps-photos">{photoTiles(9, "hero", 160)}</div>
                   <div className="ps-bar">
-                    <span style={{ fontSize: ".8rem", color: "var(--muted-fg)" }}>9 photos · 2 notes</span>
-                    <div className="ps-cam" aria-hidden="true"><CameraIcon size={24} /></div>
+                    <span className="mono" style={{ fontSize: ".8rem", color: "var(--muted-fg)" }}>9 photos, 2 notes</span>
+                    <div className="ps-cam" aria-hidden="true"><CameraIcon size={22} /></div>
                   </div>
                 </div>
               </div>
@@ -325,38 +456,63 @@ export default function SnapSite() {
 
         {/* STATS */}
         <div className="stats">
-          <div className="wrap stats-grid">
+          <Reveal as="div" className="wrap stats-grid">
             {STATS.map(([num, lbl]) => (
               <div className="stat" key={lbl}><div className="num">{num}</div><div className="lbl">{lbl}</div></div>
             ))}
-          </div>
+          </Reveal>
+          <p className="wrap stats-note">No credit card required. Works fully offline in the field.</p>
         </div>
 
         {/* FEATURES */}
         <section id="features">
           <div className="wrap">
-            <div className="sec-head">
-              <span className="eyebrow">Features</span>
+            <Reveal className="sec-head">
               <h2>Everything a field crew needs, nothing they don't</h2>
               <p className="lead">From the first tap of the shutter to the lead's final approval, SnapSite keeps the whole job in one organized place.</p>
-            </div>
-            <div className="features">
-              {FEATURES.map(({ icon: I, title, body }) => (
-                <article className="card" key={title}>
-                  <div className="ficon"><I size={24} /></div>
-                  <h3>{title}</h3>
-                  <p>{body}</p>
-                </article>
-              ))}
-            </div>
-            <div style={{ marginTop: 22 }}>
-              <article className="card" style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
-                <div className="ficon" style={{ margin: 0 }}><CameraIcon size={24} /></div>
-                <div style={{ flex: 1, minWidth: 240 }}>
-                  <h3>One-tap camera, always a thumb away</h3>
-                  <p style={{ color: "var(--muted-fg)" }}>A persistent quick-access camera button means a new photo is one tap from anywhere in the app — captured, tagged, and filed before you've taken your hand off the wall.</p>
+            </Reveal>
+            <div className="bento">
+              <Reveal as="article" index={0} className="bento-tile t-photos">
+                <div className="ficon"><PinIcon size={22} /></div>
+                <h3>GPS-tagged photo grouping</h3>
+                <p>Every photo is stamped with its location and grouped into the right project the moment it's taken. No manual sorting back at the truck.</p>
+                <div className="grid-photos" aria-hidden="true">{photoTiles(3, "tile", 140)}</div>
+              </Reveal>
+              <Reveal as="article" index={1} className="bento-tile t-map">
+                <span className="mappin active" style={{ top: 36, left: 40, background: "var(--accent)", color: "var(--accent)" }} />
+                <span className="mappin" style={{ top: 74, left: 130, background: "var(--navy)", color: "var(--navy)" }} />
+                <span className="mappin" style={{ top: 100, left: 60, background: "var(--warn)", color: "var(--warn)" }} />
+                <div style={{ marginTop: "auto" }}>
+                  <div className="ficon"><MapIcon size={22} /></div>
+                  <h3>Interactive map view</h3>
+                  <p>See every active project as a pin on the map. Tap one to jump straight into its photos, notes, and status.</p>
                 </div>
-              </article>
+              </Reveal>
+              <Reveal as="article" index={2} className="bento-tile t-work">
+                <div className="ficon"><UsersIcon size={22} /></div>
+                <h3>Workgroups with lead visibility</h3>
+                <p>Inspectors capture their own sites while the lead account sees every inspector and every location in one consolidated view.</p>
+              </Reveal>
+              <Reveal as="article" index={3} className="bento-tile t-share">
+                <div className="ficon"><ShareIcon size={22} /></div>
+                <h3>Flexible photo sharing</h3>
+                <p>Share with the whole workgroup, hand-pick specific inspectors, or generate a public link. You decide who sees it.</p>
+              </Reveal>
+              <Reveal as="article" index={4} className="bento-tile t-ai">
+                <div className="ficon" style={{ background: "rgba(255,255,255,.5)" }}><MicIcon size={22} /></div>
+                <h3>Voice &amp; text notes, plus AI reports</h3>
+                <p>Add a voice or text note to any photo. SnapSite's AI drafts a clean inspection report from your notes, but nothing saves until you review and approve it.</p>
+              </Reveal>
+              <Reveal as="article" index={5} className="bento-tile t-approve">
+                <div className="ficon"><CheckSquareIcon size={22} /></div>
+                <h3>Complete &amp; approval workflow</h3>
+                <p>An inspector marks a project done. The lead approves a one-tap close-out that archives the photos and clears it off the active list.</p>
+              </Reveal>
+              <Reveal as="article" index={6} className="bento-tile t-camera">
+                <div className="ficon"><CameraIcon size={22} /></div>
+                <h3>One-tap camera, always a thumb away</h3>
+                <p>A persistent camera button means a new photo is one tap away, captured, tagged, and filed before you take your hand off the wall.</p>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -364,17 +520,16 @@ export default function SnapSite() {
         {/* HOW IT WORKS */}
         <section id="how" className="how">
           <div className="wrap">
-            <div className="sec-head">
-              <span className="eyebrow">How it works</span>
+            <Reveal className="sec-head">
               <h2>From shutter to sign-off in four steps</h2>
-            </div>
-            <div className="steps">
-              {STEPS.map((s) => (
-                <div className="step" key={s.n}>
-                  <div className="n">{s.n}</div>
+            </Reveal>
+            <div className="timeline">
+              {STEPS.map((s, i) => (
+                <Reveal as="div" index={i} className="step" key={s.n}>
+                  <div className="n mono">{s.n}</div>
                   <h3>{s.title}</h3>
                   <p>{s.body}</p>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -383,45 +538,11 @@ export default function SnapSite() {
         {/* PREVIEW */}
         <section id="preview">
           <div className="wrap">
-            <div className="sec-head">
-              <span className="eyebrow">Preview</span>
+            <Reveal className="sec-head">
               <h2>A look inside SnapSite</h2>
-              <p className="lead">Map view, project galleries, and AI-assisted notes — built for gloved hands and bright sun.</p>
-            </div>
-            <div className="shots">
-              <div className="shot">
-                <div className="shot-top"><MapIcon size={18} style={{ color: "var(--primary)" }} /> Map view</div>
-                <div className="shot-body">
-                  <div className="map-bg">
-                    <span className="mappin" style={{ top: 60, left: 70, background: "var(--primary)" }} />
-                    <span className="mappin" style={{ top: 130, left: 180, background: "var(--accent)" }} />
-                    <span className="mappin" style={{ top: 200, left: 90, background: "var(--secondary)" }} />
-                    <span className="mappin" style={{ top: 90, left: 230, background: "var(--destructive)" }} />
-                  </div>
-                </div>
-              </div>
-              <div className="shot">
-                <div className="shot-top"><ImageIcon size={18} style={{ color: "var(--primary)" }} /> Project gallery</div>
-                <div className="shot-body"><div className="grid-photos">{photoTiles(12)}</div></div>
-              </div>
-              <div className="shot">
-                <div className="shot-top"><MicIcon size={18} style={{ color: "var(--primary)" }} /> Notes &amp; AI draft</div>
-                <div className="shot-body">
-                  <div className="note-row">
-                    <div className="note-thumb pin" />
-                    <div><div className="ai-chip">AI draft · needs approval</div><p>"Corrosion on lower bracket, recommend replacement within 30 days."</p></div>
-                  </div>
-                  <div className="note-row">
-                    <div className="note-thumb pin2" />
-                    <div><div className="ai-chip">Voice note · 0:14</div><p>Transformer reading nominal, gauge photographed for record.</p></div>
-                  </div>
-                  <div className="note-row" style={{ border: "none" }}>
-                    <div className="note-thumb pin3" />
-                    <div><div className="ai-chip">AI draft · approved</div><p>Access panel secured, no further action required.</p></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <p className="lead">Map view, project galleries, and AI-assisted notes, built for gloved hands and bright sun.</p>
+            </Reveal>
+            <PreviewShowcase />
           </div>
         </section>
 
@@ -431,17 +552,16 @@ export default function SnapSite() {
         {/* PRICING */}
         <section id="pricing" className="how">
           <div className="wrap">
-            <div className="sec-head">
-              <span className="eyebrow">Pricing</span>
+            <Reveal className="sec-head">
               <h2>Plans that scale with your crew</h2>
               <p className="lead">Start free as a solo inspector, grow into a full workgroup, or run the whole organization.</p>
-            </div>
-            <div className="pricing">
+            </Reveal>
+            <Reveal as="div" className="pricing">
               {PLANS.map((p) => (
                 <div className={`plan${p.popular ? " pop" : ""}`} key={p.name}>
                   <h3>{p.name}</h3>
-                  <div className="price">{p.price}<span>{p.per}</span></div>
-                  <p style={{ color: "var(--muted-fg)", fontSize: ".92rem" }}>{p.note}</p>
+                  <div className="price mono">{p.price}<span className="not-mono">{p.per}</span></div>
+                  <p className="desc">{p.note}</p>
                   <ul>
                     {p.features.map((f) => (
                       <li key={f}><CheckIcon size={18} strokeWidth={2.5} /> {f}</li>
@@ -450,36 +570,21 @@ export default function SnapSite() {
                   <a className={`btn ${p.primary ? "btn-primary" : "btn-ghost"}`} href="#download">{p.cta}</a>
                 </div>
               ))}
-            </div>
+            </Reveal>
           </div>
         </section>
 
         {/* TESTIMONIALS */}
         <section>
           <div className="wrap">
-            <div className="sec-head">
-              <span className="eyebrow">Testimonials</span>
-              <h2>Trusted by crews in the field</h2>
-            </div>
-            <div className="tests">
-              {TESTIMONIALS.map((t) => (
-                <figure className="quote" key={t.initials}>
-                  <div className="stars" aria-label="5 out of 5 stars">★★★★★</div>
-                  <p>"{t.quote}"</p>
-                  <figcaption className="who">
-                    <span className="avatar">{t.initials}</span>
-                    <span><span className="nm">{t.name}</span><br /><span className="rl">{t.role}</span></span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
+            <TestimonialCarousel />
           </div>
         </section>
 
         {/* CTA / DOWNLOAD */}
         <section id="download" style={{ paddingBottom: 0 }}>
           <div className="wrap">
-            <div className="cta-band">
+            <Reveal as="div" className="cta-band">
               <h2>Get your crew organized today</h2>
               <p>Join 500+ inspection teams capturing, annotating, and closing out projects with SnapSite. Free for solo inspectors.</p>
               <div className="badges">
@@ -490,7 +595,7 @@ export default function SnapSite() {
                   <PlayLogo /><span><small>Get it on</small><strong>Google Play</strong></span>
                 </a>
               </div>
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>
@@ -499,7 +604,7 @@ export default function SnapSite() {
         <div className="wrap">
           <div className="foot-grid">
             <div>
-              <a href="#top" className="brand"><span className="brand-mark" aria-hidden="true"><CameraIcon size={20} /></span>SnapSite</a>
+              <a href="#top" className="brand"><span className="brand-mark" aria-hidden="true"><CameraIcon size={18} /></span>SnapSite</a>
               <p style={{ marginTop: 14, color: "#94a3b8", fontSize: ".92rem", maxWidth: 280 }}>Field photo organization for construction and utility inspection teams.</p>
             </div>
             <div>
@@ -529,166 +634,214 @@ export default function SnapSite() {
 }
 
 /* ── Styles ────────────────────────────────────────────────────────────── */
+/*
+  Design tokens: one accent (green), one neutral ink (navy), one radius
+  scale (buttons 12px / inputs 10px / cards+panels 20px / pills full-round).
+  Amber is a scoped semantic color for the "needs approval" status chip
+  only, not a second decorative accent. Fonts loaded via next/font (or an
+  equivalent Google Fonts <link>) at the app shell level; this component
+  assumes "Outfit" and "JetBrains Mono" are already available.
+*/
 const CSS = `
 :root{
-  --primary:#1E3A5F;--primary-700:#16304f;--on-primary:#FFFFFF;--secondary:#2563EB;
-  --accent:#047857;--accent-700:#036549;--bg:#F8FAFC;--fg:#0F172A;--muted:#F1F3F5;
-  --muted-fg:#64748B;--border:#E4E7EB;--destructive:#DC2626;--radius:14px;--maxw:1200px;
-  --shadow-sm:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.08);
-  --shadow-md:0 4px 12px rgba(15,23,42,.08),0 2px 4px rgba(15,23,42,.04);
-  --shadow-lg:0 20px 40px rgba(15,23,42,.12);
+  --bg:#F7F8FA;--surface:#FFFFFF;--muted:#F1F4F7;--fg:#0B1220;--muted-fg:#5B6472;--border:#E3E7EC;
+  --navy:#0F2138;--accent:#0B7D57;--accent-fg:#FFFFFF;--accent-tint:rgba(11,125,87,.08);--accent-tint-strong:rgba(11,125,87,.14);
+  --warn:#B45309;--warn-tint:rgba(180,83,9,.08);--danger:#DC2626;
+  --header-bg:rgba(247,248,250,.85);--header-bg-solid:#F7F8FA;
+  --r-btn:12px;--r-input:10px;--r-card:20px;--r-pill:999px;--maxw:1200px;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.05),0 1px 3px rgba(15,23,42,.06);
+  --shadow-md:0 10px 24px rgba(15,23,42,.09);--shadow-lg:0 28px 56px rgba(15,23,42,.16);
+  --font-sans:"Outfit",system-ui,-apple-system,sans-serif;--font-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0B1220;--surface:#121B2E;--muted:#17223A;--fg:#EDF2F7;--muted-fg:#96A3B8;--border:rgba(255,255,255,.09);
+    --navy:#0B1220;--accent:#1BC98E;--accent-fg:#06251C;--accent-tint:rgba(27,201,142,.14);--accent-tint-strong:rgba(27,201,142,.2);
+    --warn:#F59E0B;--warn-tint:rgba(245,158,11,.12);--danger:#F87171;
+    --header-bg:rgba(11,18,32,.78);--header-bg-solid:#0B1220;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.24);
+    --shadow-md:0 10px 24px rgba(0,0,0,.36);--shadow-lg:0 28px 56px rgba(0,0,0,.5);
+  }
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;color:var(--fg);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;}
+body{margin:0;font-family:var(--font-sans);color:var(--fg);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;}
 a{color:inherit;text-decoration:none;}
 svg{display:block;}
+img{background:var(--muted);}
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:rgba(5,150,105,.08);padding:6px 14px;border-radius:999px;border:1px solid rgba(5,150,105,.18);}
-h1,h2,h3{line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:700;}
-h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:800;}
-h2{font-size:clamp(1.8rem,3.5vw,2.6rem);}
-h3{font-size:1.2rem;}
+.mono{font-family:var(--font-mono);}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-tint);padding:6px 14px;border-radius:var(--r-pill);border:1px solid var(--accent-tint-strong);}
+h1,h2,h3{line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:700;color:var(--fg);}
+h1{font-size:clamp(2.15rem,4.4vw,3.35rem);font-weight:800;}
+h2{font-size:clamp(1.7rem,3.2vw,2.4rem);}
+h3{font-size:1.15rem;}
 p{margin:0;}
-.lead{font-size:1.15rem;color:var(--muted-fg);}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;font-weight:600;font-size:1rem;cursor:pointer;padding:14px 26px;border-radius:12px;border:1px solid transparent;transition:transform .2s ease,background .2s ease,box-shadow .2s ease,border-color .2s ease;min-height:48px;}
-.btn:focus-visible{outline:3px solid rgba(37,99,235,.5);outline-offset:2px;}
-a:focus-visible,button:focus-visible{outline:3px solid rgba(37,99,235,.5);outline-offset:3px;border-radius:6px;}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm);}
-.btn-primary:hover{background:var(--accent-700);transform:translateY(-2px);box-shadow:var(--shadow-md);}
-.btn-ghost{background:#fff;color:var(--primary);border-color:var(--border);}
-.btn-ghost:hover{border-color:var(--primary);transform:translateY(-2px);}
-header{position:sticky;top:0;z-index:100;background:rgba(248,250,252,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
-.nav{display:flex;align-items:center;justify-content:space-between;height:70px;}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;color:var(--primary);}
-.brand-mark{width:34px;height:34px;border-radius:9px;background:var(--primary);display:grid;place-items:center;color:#fff;}
-.nav-links{display:flex;align-items:center;gap:30px;}
-.nav-links a.link{font-weight:500;color:var(--muted-fg);transition:color .2s;}
+.lead{font-size:1.1rem;color:var(--muted-fg);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:inherit;font-weight:600;font-size:1rem;cursor:pointer;padding:14px 24px;border-radius:var(--r-btn);border:1px solid transparent;transition:transform .18s ease,background .18s ease,box-shadow .18s ease,border-color .18s ease;min-height:48px;white-space:nowrap;}
+.btn:focus-visible{outline:3px solid var(--accent-tint-strong);outline-offset:2px;}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent-tint-strong);outline-offset:3px;border-radius:6px;}
+.btn-primary{background:var(--accent);color:var(--accent-fg);box-shadow:var(--shadow-sm);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.btn-primary:active{transform:translateY(0) scale(.98);}
+.btn-ghost{background:var(--surface);color:var(--fg);border-color:var(--border);}
+.btn-ghost:hover{border-color:var(--accent);transform:translateY(-2px);}
+.btn-ghost:active{transform:translateY(0) scale(.98);}
+.btn[disabled]{opacity:.65;cursor:not-allowed;transform:none;}
+.btn-sm{padding:11px 18px;min-height:44px;font-size:.9rem;}
+header{position:sticky;top:0;z-index:100;background:var(--header-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav{display:flex;align-items:center;justify-content:space-between;height:70px;gap:16px;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;color:var(--fg);flex:none;}
+.brand-mark{width:32px;height:32px;border-radius:9px;background:var(--navy);display:grid;place-items:center;color:#fff;flex:none;}
+.nav-links{display:flex;align-items:center;gap:26px;flex-wrap:nowrap;}
+.nav-links a.link{font-weight:500;font-size:.95rem;color:var(--muted-fg);transition:color .2s;white-space:nowrap;}
 .nav-links a.link:hover{color:var(--fg);}
-.menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px;color:var(--primary);}
-@media (max-width:880px){
+.menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px;color:var(--fg);}
+@media (max-width:980px){
   .menu-btn{display:block;}
-  .nav-links{position:absolute;top:70px;left:0;right:0;flex-direction:column;align-items:stretch;gap:6px;background:rgba(248,250,252,.98);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 24px 20px;box-shadow:var(--shadow-md);display:none;}
+  .nav-links{position:absolute;top:70px;left:0;right:0;flex-direction:column;align-items:stretch;gap:4px;background:var(--header-bg-solid);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 24px 20px;box-shadow:var(--shadow-md);display:none;}
   header.nav-open .nav-links{display:flex;}
   .nav-links a.link{display:block;padding:12px 4px;color:var(--fg);border-bottom:1px solid var(--border);}
   .nav-links a.btn-primary{margin-top:8px;}
 }
-.hero{position:relative;overflow:hidden;background:radial-gradient(1200px 500px at 80% -10%,rgba(37,99,235,.10),transparent 60%),radial-gradient(900px 400px at 10% 10%,rgba(5,150,105,.08),transparent 60%);}
-.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:84px 0 72px;}
-@media (max-width:920px){.hero-grid{grid-template-columns:1fr;gap:40px;padding:56px 0;}}
-.hero h1{margin:22px 0 18px;}
-.hero-cta{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap;}
-.hero-meta{margin-top:22px;display:flex;align-items:center;gap:10px;color:var(--muted-fg);font-size:.92rem;}
-.phone{width:300px;max-width:100%;margin:0 auto;background:#0b1f33;border-radius:38px;padding:12px;box-shadow:var(--shadow-lg);border:1px solid rgba(15,23,42,.2);}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);transition-delay:calc(var(--i,0) * 70ms);}
+.reveal.is-visible{opacity:1;transform:translateY(0);}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;scroll-behavior:auto !important;animation:none !important;}.reveal{opacity:1 !important;transform:none !important;}}
+.hero{position:relative;overflow:hidden;background:radial-gradient(1100px 480px at 82% -10%,var(--accent-tint),transparent 60%),radial-gradient(800px 380px at 6% 6%,var(--accent-tint),transparent 60%);}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center;padding:clamp(56px,8vw,84px) 0 clamp(48px,6vw,68px);}
+@media (max-width:920px){.hero-grid{grid-template-columns:1fr;gap:40px;padding:48px 0 40px;}}
+.hero h1{margin:20px 0 16px;}
+.hero-cta{display:flex;gap:14px;margin-top:26px;flex-wrap:wrap;}
+.phone{width:290px;max-width:100%;margin:0 auto;background:#0b1f33;border-radius:38px;padding:12px;box-shadow:var(--shadow-lg);border:1px solid rgba(15,23,42,.25);}
 .phone-screen{background:var(--bg);border-radius:28px;overflow:hidden;}
-.ps-top{background:var(--primary);color:#fff;padding:18px 16px 14px;}
+.ps-top{background:var(--navy);color:#fff;padding:16px 16px 12px;}
 .ps-top small{opacity:.7;font-size:11px;letter-spacing:.05em;text-transform:uppercase;}
 .ps-top .loc{display:flex;align-items:center;gap:7px;font-weight:600;margin-top:4px;}
-.ps-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;}
-.ps-photos div{aspect-ratio:1;border-radius:6px;}
-.pin{background:linear-gradient(135deg,#3b6ea5,#1E3A5F);}
-.pin2{background:linear-gradient(135deg,#10b981,#047857);}
-.pin3{background:linear-gradient(135deg,#475569,#1e293b);}
+.ps-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px;}
+.ps-photos img{aspect-ratio:1;width:100%;height:100%;object-fit:cover;}
 .ps-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border);}
-.ps-cam{width:54px;height:54px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;box-shadow:0 6px 16px rgba(5,150,105,.4);margin-top:-34px;border:4px solid var(--bg);}
-.stats{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#fff;}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding:36px 0;text-align:center;}
+.ps-cam{width:52px;height:52px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:var(--accent-fg);box-shadow:0 6px 16px var(--accent-tint-strong);margin-top:-32px;border:4px solid var(--bg);}
+.stats{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface);}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding:32px 0 10px;text-align:center;}
 @media (max-width:680px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
-.stat .num{font-size:2rem;font-weight:800;color:var(--primary);}
-.stat .lbl{color:var(--muted-fg);font-size:.92rem;}
+.stat .num{font-family:var(--font-mono);font-size:1.8rem;font-weight:600;color:var(--fg);}
+.stat .lbl{color:var(--muted-fg);font-size:.88rem;margin-top:2px;}
+.stats-note{text-align:center;color:var(--muted-fg);font-size:.85rem;padding:8px 0 26px;}
 section{padding:84px 0;}
-.sec-head{max-width:680px;margin:0 auto 56px;text-align:center;}
-.sec-head h2{margin:16px 0 14px;}
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
-@media (max-width:920px){.features{grid-template-columns:repeat(2,1fr);}}
-@media (max-width:600px){.features{grid-template-columns:1fr;}}
-.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow-sm);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;}
-.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:#cbd5e1;}
-.ficon{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:rgba(30,58,95,.07);color:var(--primary);margin-bottom:18px;}
-.card h3{margin-bottom:8px;}
-.card p{color:var(--muted-fg);font-size:.96rem;}
-.how{background:#fff;}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
-@media (max-width:920px){.steps{grid-template-columns:repeat(2,1fr);}}
-@media (max-width:520px){.steps{grid-template-columns:1fr;}}
-.step{position:relative;padding-top:8px;}
-.step .n{width:44px;height:44px;border-radius:12px;background:var(--primary);color:#fff;font-weight:700;display:grid;place-items:center;margin-bottom:16px;}
+.sec-head{max-width:640px;margin:0 auto 48px;text-align:center;}
+.sec-head.left{text-align:left;margin:0;max-width:640px;}
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(120px,auto);gap:18px;}
+.bento-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:26px;box-shadow:var(--shadow-sm);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.bento-tile:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--accent-tint-strong);}
+.bento-tile .ficon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--accent-tint);color:var(--accent);margin-bottom:16px;flex:none;}
+.bento-tile h3{margin-bottom:8px;}
+.bento-tile p{color:var(--muted-fg);font-size:.95rem;}
+.t-photos{grid-column:span 2;grid-row:span 2;}
+.t-map{grid-column:span 2;}
+.t-work{grid-column:span 1;}
+.t-share{grid-column:span 1;}
+.t-ai{grid-column:span 2;background:var(--accent-tint);border-color:var(--accent-tint-strong);}
+.t-approve{grid-column:span 1;}
+.t-camera{grid-column:span 1;}
+.t-photos .grid-photos{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.t-photos .grid-photos img{border-radius:8px;aspect-ratio:1;object-fit:cover;}
+.t-map{background:linear-gradient(var(--border) 1px,transparent 1px) 0 0/24px 24px,linear-gradient(90deg,var(--border) 1px,transparent 1px) 0 0/24px 24px,var(--muted);}
+.t-map .mappin{position:absolute;width:14px;height:14px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:var(--shadow-sm);}
+@media (max-width:980px){.bento{grid-template-columns:repeat(2,1fr);}.t-photos,.t-map,.t-ai{grid-column:span 2;grid-row:auto;}}
+@media (max-width:620px){.bento{grid-template-columns:1fr;}.t-photos,.t-map,.t-ai,.t-work,.t-share,.t-approve,.t-camera{grid-column:span 1;grid-row:auto;}}
+.how{background:var(--surface);}
+.timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;position:relative;}
+.timeline::before{content:"";position:absolute;top:21px;left:calc(12.5% - 1px);right:calc(12.5% - 1px);height:2px;background:var(--border);z-index:0;}
+@media (max-width:920px){.timeline{grid-template-columns:repeat(2,1fr);row-gap:36px;}.timeline::before{display:none;}}
+@media (max-width:560px){.timeline{grid-template-columns:1fr;}}
+.step{position:relative;z-index:1;}
+.step .n{width:44px;height:44px;border-radius:50%;background:var(--surface);color:var(--fg);font-weight:700;display:grid;place-items:center;margin-bottom:16px;border:2px solid var(--accent);box-shadow:0 0 0 6px var(--bg);}
 .step h3{font-size:1.05rem;margin-bottom:6px;}
 .step p{color:var(--muted-fg);font-size:.93rem;}
-.shots{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-@media (max-width:820px){.shots{grid-template-columns:1fr;}}
-.shot{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:#fff;box-shadow:var(--shadow-sm);}
-.shot-top{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-weight:600;}
-.shot-body{padding:0;height:300px;position:relative;}
-.map-bg{width:100%;height:100%;background:linear-gradient(rgba(30,58,95,.04) 1px,transparent 1px) 0 0/26px 26px,linear-gradient(90deg,rgba(30,58,95,.04) 1px,transparent 1px) 0 0/26px 26px,#eef2f6;position:relative;}
+.showcase{border:1px solid var(--border);border-radius:var(--r-card);background:var(--surface);box-shadow:var(--shadow-sm);overflow:hidden;}
+.showcase-tabs{display:flex;gap:4px;padding:10px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.showcase-tab{font-family:inherit;font-weight:600;font-size:.9rem;color:var(--muted-fg);background:none;border:1px solid transparent;border-radius:var(--r-btn);padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .2s,color .2s;}
+.showcase-tab:hover{color:var(--fg);}
+.showcase-tab.active{background:var(--accent-tint);color:var(--accent);}
+.showcase-body{min-height:340px;}
+.grid-photos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:16px;}
+.grid-photos img{aspect-ratio:1;border-radius:8px;object-fit:cover;width:100%;height:100%;}
+@media (max-width:560px){.grid-photos{grid-template-columns:repeat(3,1fr);}}
+.map-bg{width:100%;height:340px;position:relative;background:linear-gradient(var(--border) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,var(--border) 1px,transparent 1px) 0 0/28px 28px,var(--muted);}
 .mappin{position:absolute;width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:var(--shadow-sm);}
-.grid-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:14px;}
-.grid-photos div{aspect-ratio:1;border-radius:8px;}
-.note-row{display:flex;gap:10px;padding:14px;align-items:flex-start;border-bottom:1px solid var(--border);}
-.note-thumb{width:46px;height:46px;border-radius:8px;flex:none;}
-.note-row p{font-size:.85rem;color:var(--muted-fg);}
-.ai-chip{display:inline-block;font-size:11px;font-weight:600;color:var(--secondary);background:rgba(37,99,235,.1);padding:2px 8px;border-radius:6px;margin-bottom:4px;}
-.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch;}
-@media (max-width:880px){.pricing{grid-template-columns:1fr;max-width:460px;margin:0 auto;}}
-.plan{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:30px;display:flex;flex-direction:column;box-shadow:var(--shadow-sm);}
-.plan.pop{border-color:var(--accent);box-shadow:0 10px 30px rgba(5,150,105,.15);position:relative;}
-.plan.pop::before{content:"Most popular";position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:12px;font-weight:600;padding:5px 14px;border-radius:999px;}
-.plan h3{font-size:1.15rem;}
-.price{font-size:2.4rem;font-weight:800;color:var(--primary);margin:12px 0 2px;}
-.price span{font-size:1rem;font-weight:500;color:var(--muted-fg);}
-.plan ul{list-style:none;padding:0;margin:20px 0 26px;display:grid;gap:11px;}
-.plan li{display:flex;gap:10px;align-items:flex-start;font-size:.94rem;color:#334155;}
+.mappin.active::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid currentColor;opacity:.5;}
+@media (prefers-reduced-motion:no-preference){.mappin.active::after{animation:pin-pulse 1.8s ease-out infinite;}}
+@keyframes pin-pulse{0%{transform:scale(.6);opacity:.6;}100%{transform:scale(1.8);opacity:0;}}
+.note-row{display:flex;gap:12px;padding:16px;align-items:flex-start;border-bottom:1px solid var(--border);}
+.note-row:last-child{border-bottom:none;}
+.note-thumb{width:46px;height:46px;border-radius:8px;flex:none;object-fit:cover;}
+.note-row p{font-size:.9rem;color:var(--muted-fg);}
+.status-chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:var(--r-pill);margin-bottom:5px;}
+.status-chip.pending{color:var(--warn);background:var(--warn-tint);}
+.status-chip.approved{color:var(--accent);background:var(--accent-tint);}
+.status-chip.neutral{color:var(--muted-fg);background:var(--muted);}
+.pricing{display:grid;grid-template-columns:1fr 1.12fr 1fr;gap:20px;align-items:stretch;}
+@media (max-width:880px){.pricing{grid-template-columns:1fr;max-width:440px;margin:0 auto;}}
+.plan{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:28px;display:flex;flex-direction:column;box-shadow:var(--shadow-sm);}
+.plan.pop{border-color:var(--accent);box-shadow:var(--shadow-md);position:relative;padding-top:34px;}
+.plan.pop::before{content:"Most popular";position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--accent-fg);font-size:12px;font-weight:600;padding:5px 14px;border-radius:var(--r-pill);}
+.plan h3{font-size:1.1rem;}
+.price{font-size:2.1rem;font-weight:600;color:var(--fg);margin:12px 0 2px;}
+.price span.not-mono{font-family:var(--font-sans);font-size:1rem;font-weight:500;color:var(--muted-fg);}
+.plan .desc{color:var(--muted-fg);font-size:.92rem;}
+.plan ul{list-style:none;padding:0;margin:20px 0 24px;display:grid;gap:11px;}
+.plan li{display:flex;gap:10px;align-items:flex-start;font-size:.94rem;color:var(--fg);}
 .plan li svg{flex:none;margin-top:3px;color:var(--accent);}
 .plan .btn{margin-top:auto;width:100%;}
-.tests{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
-@media (max-width:880px){.tests{grid-template-columns:1fr;}}
-.quote{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow-sm);}
-.quote p{font-size:1rem;color:#1e293b;}
-.stars{color:#f59e0b;margin-bottom:14px;letter-spacing:2px;}
+.quote-row{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+.carousel-nav{display:flex;gap:8px;flex:none;}
+.carousel-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--fg);display:grid;place-items:center;cursor:pointer;transition:border-color .2s,transform .2s;}
+.carousel-btn:hover{border-color:var(--accent);transform:translateY(-1px);}
+.quote-track{display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:thin;}
+.quote{flex:0 0 min(360px,86vw);scroll-snap-align:start;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:26px;box-shadow:var(--shadow-sm);}
+.quote p{font-size:1rem;color:var(--fg);}
+.stars{color:#D97706;margin-bottom:14px;letter-spacing:2px;}
 .who{display:flex;align-items:center;gap:12px;margin-top:20px;}
-.avatar{width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;}
-.who .nm{font-weight:600;font-size:.95rem;}
-.who .rl{font-size:.85rem;color:var(--muted-fg);}
-.cta-band{background:var(--primary);color:#fff;border-radius:24px;padding:56px;text-align:center;}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.85rem;flex:none;}
+.who .nm{font-weight:600;font-size:.94rem;}
+.who .rl{font-size:.84rem;color:var(--muted-fg);}
+.cta-band{background:var(--navy);color:#fff;border-radius:var(--r-card);padding:52px;text-align:center;}
 .cta-band h2{color:#fff;}
-.cta-band p{color:rgba(255,255,255,.8);max-width:540px;margin:14px auto 28px;}
+.cta-band p{color:rgba(255,255,255,.78);max-width:520px;margin:14px auto 26px;}
 .badges{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
-.store{display:flex;align-items:center;gap:10px;background:#0b1f33;border:1px solid rgba(255,255,255,.18);padding:10px 18px;border-radius:12px;transition:transform .2s,border-color .2s;}
+.store{display:flex;align-items:center;gap:10px;background:#0b1f33;border:1px solid rgba(255,255,255,.18);padding:10px 18px;border-radius:var(--r-btn);transition:transform .2s,border-color .2s;}
 .store:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.4);}
 .store small{display:block;font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.05em;}
 .store strong{font-size:1rem;}
-footer{background:#0b1f33;color:#cbd5e1;padding:56px 0 30px;margin-top:84px;}
-.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px;}
+footer{background:#0b1f33;color:#cbd5e1;padding:52px 0 28px;margin-top:84px;}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;}
 @media (max-width:760px){.foot-grid{grid-template-columns:1fr 1fr;}}
-footer h4{color:#fff;font-size:.95rem;margin:0 0 14px;}
-footer a.fl{display:block;color:#94a3b8;padding:5px 0;font-size:.92rem;transition:color .2s;}
+footer h4{color:#fff;font-size:.92rem;margin:0 0 14px;}
+footer a.fl{display:block;color:#94a3b8;padding:5px 0;font-size:.9rem;transition:color .2s;}
 footer a.fl:hover{color:#fff;}
 footer .brand{color:#fff;}
-footer .brand-mark{background:#fff;color:var(--primary);}
-.foot-bottom{border-top:1px solid rgba(255,255,255,.1);margin-top:40px;padding-top:22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:#64748b;font-size:.85rem;}
-.demo{background:#fff;}
-.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;}
+footer .brand-mark{background:#fff;color:var(--navy);}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.1);margin-top:36px;padding-top:20px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:#64748b;font-size:.85rem;}
+.demo{background:var(--bg);}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
 @media (max-width:880px){.demo-grid{grid-template-columns:1fr;}}
-.demo-panel{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);box-shadow:var(--shadow-sm);overflow:hidden;}
-.demo-panel-top{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-weight:600;background:#fff;}
+.demo-panel{border:1px solid var(--border);border-radius:var(--r-card);background:var(--surface);box-shadow:var(--shadow-sm);overflow:hidden;}
+.demo-panel-top{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-weight:600;}
 .demo-body{padding:20px;}
 .demo-label{display:block;font-size:.82rem;font-weight:600;color:var(--muted-fg);margin:0 0 6px;letter-spacing:.02em;}
-.demo-input,.demo-textarea{width:100%;font-family:inherit;font-size:.95rem;color:var(--fg);padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;resize:vertical;}
-.demo-input:focus,.demo-textarea:focus{outline:none;border-color:var(--secondary);box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+.demo-input,.demo-textarea{width:100%;font-family:inherit;font-size:.95rem;color:var(--fg);padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-input);background:var(--bg);resize:vertical;}
+.demo-input:focus,.demo-textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-tint-strong);}
 .demo-textarea{min-height:150px;line-height:1.5;}
 .demo-actions{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap;}
 .demo-hint{font-size:.82rem;color:var(--muted-fg);margin-top:12px;}
-.demo-out{min-height:230px;white-space:pre-wrap;font-size:.92rem;color:#1e293b;line-height:1.6;}
+.demo-out{min-height:230px;white-space:pre-wrap;font-size:.92rem;color:var(--fg);line-height:1.6;}
 .demo-out .placeholder{color:var(--muted-fg);}
-.demo-out h1,.demo-out h2,.demo-out h3{font-size:1rem;margin:14px 0 4px;color:var(--primary);}
+.demo-out h1,.demo-out h2,.demo-out h3{font-size:1rem;margin:14px 0 4px;color:var(--fg);}
 .demo-out strong{color:var(--fg);}
-.draft-banner{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;color:var(--secondary);background:rgba(37,99,235,.1);padding:8px 12px;border-radius:8px;margin-bottom:14px;}
-.draft-banner.approved{color:var(--accent);background:rgba(5,150,105,.1);}
+.draft-banner{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;color:var(--warn);background:var(--warn-tint);padding:8px 12px;border-radius:var(--r-btn);margin-bottom:14px;}
+.draft-banner.approved{color:var(--accent);background:var(--accent-tint);}
 .approve-row{display:none;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap;}
 .approve-row.show{display:flex;}
-.btn-sm{padding:11px 18px;min-height:44px;font-size:.9rem;}
 .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.btn[disabled]{opacity:.65;cursor:not-allowed;transform:none;}
-@media (prefers-reduced-motion:reduce){*{transition:none !important;scroll-behavior:auto !important;animation:none !important;}}
 `;
