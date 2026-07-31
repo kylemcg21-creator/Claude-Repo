@@ -18,6 +18,8 @@ Clone the repo and open it in [Claude Code](https://claude.ai/code) to start bui
 
   The package ships a compiled runtime binary in its PyPI wheels, so it must be installed via `pip` (not just cloned from GitHub). Import it as `from google import antigravity` — the top-level `antigravity` name is reserved by Python's stdlib easter-egg module.
 
+  On Windows, you can install [`uv`](https://docs.astral.sh/uv/) — a fast drop-in replacement for `pip`/`venv` — via `setup-uv.ps1` or `setup-uv.bat`. See [UV_SETUP.md](UV_SETUP.md) for details.
+
 ### NeuroLink
 
 [**NeuroLink**](https://github.com/juspay/neurolink) is a universal AI integration platform that unifies 30+ LLM providers under a single consistent API. Perfect for multi-provider AI applications.
