@@ -20,7 +20,8 @@ This is a sandbox/starter repo for experimenting with Claude Code on the web. It
 
 ## Agent skills
 
-- `.claude/skills/` and `.agents/skills/` hold installed Claude Code / Codex agent skills (design, UI, brand, Vercel, animation, writing-guidelines, `stop-slop`, etc.), tracked via `skills-lock.json` (records each skill's upstream GitHub source and content hash). These are vendored dependencies, not application code — don't hand-edit files under these directories; they'd be overwritten by the skill manager.
+- `.claude/skills/` and `.agents/skills/` hold installed Claude Code / Codex agent skills (design, UI, brand, Vercel, animation, writing-guidelines, `stop-slop`, Remotion, etc.), tracked via `skills-lock.json` (records each skill's upstream GitHub source and content hash). These are vendored dependencies, not application code — don't hand-edit files under these directories; they'd be overwritten by the skill manager.
+- `.agents/skills/remotion-*` — the Remotion (`remotion-dev/remotion`) skill family for programmatic video creation with React. `remotion-best-practices` is the router: it loads `remotion-create` for new projects, then dispatches to `remotion-markup`, `remotion-maps`, `remotion-multimedia`, `remotion-interactivity`, `remotion-render`, `remotion-captions`, `remotion-saas`, `remotion-docs`, or `remotion-upgrade` depending on the task. Start from `remotion-best-practices` for any Remotion work.
 - `.claude/skills/nano-banana/` is the one exception: a repo-local, hand-maintained skill (not in `skills-lock.json`) for generating/editing images with Google's Nano Banana models, with its own `scripts/generate.py` and preset library. It requires `GEMINI_API_KEY`. Its Python deps are auto-installed on session start via the `SessionStart` hook wired in `.claude/settings.json`, which runs `.claude/hooks/install-skill-deps.sh` (idempotent — checks whether `google.genai` already imports before installing anything).
 
 ## Deployment
