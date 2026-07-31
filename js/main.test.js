@@ -563,3 +563,150 @@ describe('localStorage Quota and Error Handling', () => {
     expect(() => storage.setItem('key2', 'short')).not.toThrow();
   });
 });
+
+// Scroll-spy: highlights the nav link for the section currently intersecting the viewport
+function createScrollSpy(navLinks) {
+  return {
+    handleIntersection(entries) {
+      entries.forEach((entry) => {
+        const link = navLinks.find((a) => a.href === '#' + entry.id);
+        if (!link) return;
+        if (entry.isIntersecting) {
+          navLinks.forEach((a) => a.classes.delete('active'));
+          link.classes.add('active');
+        }
+      });
+    },
+    getActiveLink() {
+      return navLinks.find((a) => a.classes.has('active')) || null;
+    },
+  };
+}
+
+function makeNavLink(href) {
+  return { href, classes: new Set() };
+}
+
+describe('Scroll-Spy Navigation Highlighting', () => {
+  it('should mark the link for an intersecting section as active', () => {
+    const links = [makeNavLink('#intro'), makeNavLink('#features')];
+    const spy = createScrollSpy(links);
+
+    spy.handleIntersection([{ id: 'features', isIntersecting: true }]);
+
+    expect(spy.getActiveLink().href).toBe('#features');
+  });
+
+  it('should remove active from other links when a new section intersects', () => {
+    const links = [makeNavLink('#intro'), makeNavLink('#features')];
+    const spy = createScrollSpy(links);
+
+    spy.handleIntersection([{ id: 'intro', isIntersecting: true }]);
+    expect(spy.getActiveLink().href).toBe('#intro');
+
+    spy.handleIntersection([{ id: 'features', isIntersecting: true }]);
+    expect(spy.getActiveLink().href).toBe('#features');
+    expect(links[0].classes.has('active')).toBe(false);
+  });
+
+  it('should ignore entries that are not intersecting', () => {
+    const links = [makeNavLink('#intro'), makeNavLink('#features')];
+    const spy = createScrollSpy(links);
+
+    spy.handleIntersection([{ id: 'intro', isIntersecting: true }]);
+    spy.handleIntersection([{ id: 'features', isIntersecting: false }]);
+
+    expect(spy.getActiveLink().href).toBe('#intro');
+  });
+
+  it('should do nothing when no nav link matches the section id', () => {
+    const links = [makeNavLink('#intro')];
+    const spy = createScrollSpy(links);
+
+    spy.handleIntersection([{ id: 'unknown-section', isIntersecting: true }]);
+
+    expect(spy.getActiveLink()).toBeNull();
+  });
+
+  it('should return null when no section has ever intersected', () => {
+    const links = [makeNavLink('#intro'), makeNavLink('#features')];
+    const spy = createScrollSpy(links);
+
+    expect(spy.getActiveLink()).toBeNull();
+  });
+
+  it('should activate the last intersecting entry when multiple entries fire together', () => {
+    const links = [makeNavLink('#intro'), makeNavLink('#features'), makeNavLink('#pricing')];
+    const spy = createScrollSpy(links);
+
+    spy.handleIntersection([
+      { id: 'intro', isIntersecting: true },
+      { id: 'features', isIntersecting: true },
+    ]);
+
+    expect(spy.getActiveLink().href).toBe('#features');
+  });
+});
+
+// Back-to-top button visibility toggle based on scroll position
+function createBackToTopController(threshold = 600) {
+  let visible = false;
+  return {
+    isVisible() {
+      return visible;
+    },
+    updateVisibility(scrollY) {
+      visible = scrollY > threshold;
+      return visible;
+    },
+  };
+}
+
+describe('Back-to-Top Button', () => {
+  it('should be hidden before any scroll update', () => {
+    const backToTop = createBackToTopController();
+    expect(backToTop.isVisible()).toBe(false);
+  });
+
+  it('should stay hidden below the scroll threshold', () => {
+    const backToTop = createBackToTopController();
+    backToTop.updateVisibility(300);
+    expect(backToTop.isVisible()).toBe(false);
+  });
+
+  it('should stay hidden at exactly the threshold', () => {
+    const backToTop = createBackToTopController(600);
+    backToTop.updateVisibility(600);
+    expect(backToTop.isVisible()).toBe(false);
+  });
+
+  it('should become visible just past the threshold', () => {
+    const backToTop = createBackToTopController(600);
+    backToTop.updateVisibility(601);
+    expect(backToTop.isVisible()).toBe(true);
+  });
+
+  it('should become hidden again when scrolling back up', () => {
+    const backToTop = createBackToTopController(600);
+    backToTop.updateVisibility(1000);
+    expect(backToTop.isVisible()).toBe(true);
+
+    backToTop.updateVisibility(0);
+    expect(backToTop.isVisible()).toBe(false);
+  });
+
+  it('should respect a custom threshold', () => {
+    const backToTop = createBackToTopController(100);
+    backToTop.updateVisibility(150);
+    expect(backToTop.isVisible()).toBe(true);
+  });
+
+  it('should track visibility across repeated scroll events', () => {
+    const backToTop = createBackToTopController(600);
+
+    [0, 700, 200, 900, 50].forEach((scrollY) => {
+      backToTop.updateVisibility(scrollY);
+      expect(backToTop.isVisible()).toBe(scrollY > 600);
+    });
+  });
+});
