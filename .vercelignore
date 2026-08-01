@@ -4,3 +4,44 @@
 # is a local-run Express backend, not part of the deployed static site.
 pyproject.toml
 projects/snapsite-website/server
+
+# --- Not part of the deployed site ---
+# vercel.json sets outputDirectory ".", so every file here is otherwise
+# publicly fetchable. The root site (index.html + css/ + js/) links to none
+# of the paths below — they are source trees and agent config, not pages.
+
+# Agent configuration: subagent prompts, slash commands, hooks, vendored skills.
+.claude/
+.agents/
+skills/
+skills-lock.json
+
+# Application source kept in-repo but not served.
+meridian-dashboard/
+projects/obsidian-landing/
+projects/water-pipe-configurator/
+
+# Course content (markdown, not a site).
+projects/prompt-engineering-mentor/
+connect-apps-plugin/
+
+# Repo plumbing — build/test/setup config, never requested by a browser.
+package.json
+vitest.config.js
+setup.bat
+setup.ps1
+.mcp.json
+.gitignore
+
+# Tests never belong on the public site.
+*.test.js
+*.test.ts
+
+# Repo-facing docs. A bare filename matches at any depth, so this also
+# covers the nested projects/*/CLAUDE.md memory files.
+CLAUDE.md
+README.md
+GRAPHIFY_INSTALLATION.md
+NEUROLINK_INSTALLATION.md
+TEST_COVERAGE_IMPROVEMENTS.md
+WINDOWS_SETUP.md
