@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Obsidian — Order out of chaos.</title>
+<meta name="description" content="Obsidian: a command center for notes, habits and Stoic discipline. 365 days of practice wired into one graph you actually keep." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#080706;
+    --ink-2:#0a0908;
+    --gold:#c9a24a;
+    --gold-hi:#e8c877;
+    --gold-lo:#8a6d2a;
+    --gold-pale:#f0d68f;
+    --paper:#ece5d6;
+    --muted:#a39c8e;
+    --muted-2:#7d766a;
+    --hair:rgba(201,162,74,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--ink);font-family:'Manrope',sans-serif;color:var(--paper);overflow-x:hidden;position:relative;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--gold);color:var(--ink)}
+  a{color:var(--gold);text-decoration:none}
+  a:hover{color:var(--gold-pale)}
+  img,svg{display:block;max-width:100%}
+  button{font:inherit;cursor:pointer}
+
+  @keyframes rise{from{opacity:0;transform:translateY(56px);filter:blur(10px)}to{opacity:1;transform:none;filter:blur(0)}}
+  @keyframes fadeIn{from{opacity:0;filter:blur(6px)}to{opacity:1;filter:blur(0)}}
+  @keyframes veinDraw{to{stroke-dashoffset:0}}
+  @keyframes slowZoom{from{transform:scale(1)}to{transform:scale(1.09)}}
+  @keyframes drift{0%{opacity:0;transform:translate3d(0,0,0) scale(.5)}18%{opacity:.55}100%{opacity:0;transform:translate3d(26px,-320px,0) scale(1.3)}}
+  @keyframes fogPan{from{transform:translate3d(-4%,0,0)}to{transform:translate3d(4%,0,0)}}
+  @keyframes coreSpin{from{transform:rotate(45deg)}to{transform:rotate(405deg)}}
+  @keyframes shimmer{0%{background-position:120% 0}100%{background-position:-120% 0}}
+  @keyframes marqueeScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ── reveal-on-scroll ── */
+  .reveal{opacity:0}
+  .reveal.is-visible{animation:rise .95s cubic-bezier(.16,.84,.3,1) both}
+  .reveal.is-visible[data-d="1"]{animation-delay:.09s}
+  .reveal.is-visible[data-d="2"]{animation-delay:.18s}
+  .reveal.is-visible[data-d="3"]{animation-delay:.27s}
+  .reveal.is-visible[data-d="4"]{animation-delay:.36s}
+
+  /* ── atmosphere ── */
+  .grain{position:fixed;inset:0;width:100%;height:100%;z-index:70;pointer-events:none;opacity:.055;mix-blend-mode:overlay}
+  .vignette{position:fixed;inset:0;z-index:69;pointer-events:none;box-shadow:inset 0 0 260px 90px rgba(0,0,0,.85)}
+  .progress-track{position:fixed;top:0;left:0;right:0;height:2px;background:rgba(201,162,74,.12);z-index:60}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#8a6d2a,#e8c877,#fff2cf);box-shadow:0 0 12px rgba(232,200,119,.6);transition:width .08s linear}
+
+  /* ── nav ── */
+  .nav{position:fixed;top:2px;left:0;right:0;z-index:50;backdrop-filter:blur(14px);background:rgba(8,7,6,.72);border-bottom:1px solid var(--hair)}
+  .nav-inner{max-width:1280px;margin:0 auto;padding:0 32px;height:72px;display:flex;align-items:center;gap:24px;flex-wrap:nowrap}
+  .mark{display:flex;align-items:center;gap:14px;flex:none}
+  .mark-glyph{width:26px;height:26px;border:1px solid var(--gold);transform:rotate(45deg);display:flex;align-items:center;justify-content:center}
+  .mark-glyph i{width:9px;height:9px;background:var(--gold);transform:rotate(45deg)}
+  .mark-word{font-family:'Cormorant Garamond',serif;font-size:21px;letter-spacing:.16em;color:#f1e9d8;white-space:nowrap}
+  .navlinks{display:flex;gap:26px;margin-left:8px;flex:1;min-width:0}
+  .navlinks a{font-size:13.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);white-space:nowrap}
+  .navlinks a:hover{color:var(--gold-hi)}
+  .nav-right{margin-left:auto;display:flex;align-items:center;gap:16px;flex:none}
+  .nav-right>a:first-child{font-size:13.5px;color:var(--muted-2);white-space:nowrap}
+  .nav-right>a:first-child:hover{color:var(--paper)}
+  .btn-gold{padding:11px 24px;border:1px solid var(--gold);border-radius:2px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#0b0a08;background:linear-gradient(140deg,var(--gold-hi),#b98f34);font-weight:700;white-space:nowrap;transition:box-shadow .3s,background .3s;display:inline-block}
+  .btn-gold:hover{background:linear-gradient(140deg,#fff0c4,#d3a743);box-shadow:0 0 26px rgba(232,200,119,.35);color:#0b0a08}
+  .btn-outline{padding:17px 34px;border:1px solid rgba(201,162,74,.35);border-radius:2px;font-size:13.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:#e0d6bf;transition:border-color .3s,background .3s;display:inline-block}
+  .btn-outline:hover{border-color:var(--gold);background:rgba(201,162,74,.08);color:#e0d6bf}
+  .btn-gold-lg{padding:17px 34px;border-radius:2px;font-size:13.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:#0b0a08;background:linear-gradient(140deg,var(--gold-hi),#b98f34);transition:box-shadow .3s;display:inline-block}
+  .btn-gold-lg:hover{box-shadow:0 0 34px rgba(232,200,119,.45);color:#0b0a08}
+
+  @media (max-width:860px){ .navlinks{display:none} }
+  @media (max-width:520px){
+    .nav-inner{padding:0 20px;gap:12px}
+    .nav-right{gap:0}
+    .nav-right>a:first-child{display:none}
+    .mark-word{font-size:16px}
+    .btn-gold{padding:9px 14px;font-size:10.5px;letter-spacing:.08em}
+  }
+
+  /* ── hero ── */
+  .hero{position:relative;min-height:920px;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;overflow:hidden;border-bottom:1px solid var(--hair)}
+  .hero-glow{position:absolute;inset:0;pointer-events:none;background:
+    radial-gradient(ellipse 1000px 720px at 72% 42%,rgba(232,160,60,.16),transparent 62%),
+    radial-gradient(ellipse 900px 700px at 6% 88%,rgba(120,110,95,.12),transparent 60%)}
+  .embers{position:absolute;inset:0;pointer-events:none;z-index:2}
+  .embers i{position:absolute;border-radius:50%;background:var(--gold-hi);box-shadow:0 0 8px 2px rgba(232,200,119,.6);animation:drift linear infinite}
+  .fog{position:absolute;left:-6%;right:-6%;bottom:-10%;height:60%;pointer-events:none;background:radial-gradient(ellipse 60% 100% at 60% 100%,rgba(140,120,86,.16),transparent 70%);filter:blur(30px);animation:fogPan 26s ease-in-out infinite alternate}
+  .vein{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;opacity:.55}
+  .vein path{fill:none;stroke:url(#gv);stroke-dasharray:2600;stroke-dashoffset:2600;animation:veinDraw 3.2s .5s ease-out forwards}
+  .vein path:nth-child(2){stroke-width:1;stroke-dasharray:1400;stroke-dashoffset:1400;animation-duration:3.6s;animation-delay:.9s}
+
+  .hero-copy{position:relative;z-index:3;padding:150px 0 100px;max-width:1280px;width:100%;margin:0 auto;padding-left:max(40px,calc((100vw - 1280px)/2 + 40px))}
+  .eyebrow{display:flex;align-items:center;gap:14px;opacity:0;animation:fadeIn .8s .2s both}
+  .eyebrow .rule{width:46px;height:1px;background:var(--gold)}
+  .eyebrow span{font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
+  .h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(56px,6.6vw,104px);line-height:.98;letter-spacing:-.02em;color:#f6efdf;margin:30px 0 0;max-width:14ch;opacity:0;animation:rise 1s .3s both}
+  .h1 em{font-style:italic;background:linear-gradient(120deg,#fff3d0,#e8c877 40%,#a87f28);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{font-size:18.5px;line-height:1.66;color:var(--muted);max-width:47ch;margin-top:30px;text-wrap:pretty;opacity:0;animation:rise 1s .45s both}
+  .hero-ctas{display:flex;gap:16px;margin-top:44px;opacity:0;animation:rise 1s .6s both}
+  .hero-stats{display:flex;gap:52px;margin-top:74px;opacity:0;animation:rise 1s .75s both}
+  .stat b{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:40px;color:var(--gold-hi);line-height:1;display:block}
+  .stat span{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);margin-top:8px;display:block}
+  .stat-sep{width:1px;background:rgba(201,162,74,.2)}
+
+  .hero-art{position:relative;height:920px;overflow:hidden}
+  .hero-art-inner{position:absolute;inset:-14% 0;will-change:transform}
+  .hero-art-panel{position:absolute;inset:0;width:100%;height:100%;animation:slowZoom 22s ease-out both;
+    background:
+      radial-gradient(ellipse 60% 46% at 68% 30%,rgba(232,200,119,.20),transparent 60%),
+      radial-gradient(ellipse 50% 60% at 20% 78%,rgba(120,108,80,.28),transparent 65%),
+      linear-gradient(155deg,#211c14 0%,#12100c 46%,#0a0908 100%)}
+  .hero-art-cracks{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+  .hero-shade-a{position:absolute;inset:0;background:linear-gradient(90deg,#080706 0%,rgba(8,7,6,.86) 18%,rgba(8,7,6,.18) 58%,rgba(8,7,6,.55) 100%)}
+  .hero-shade-b{position:absolute;inset:0;background:linear-gradient(0deg,#080706 0%,transparent 26%)}
+  .hero-shade-c{position:absolute;inset:0;box-shadow:inset 90px 0 130px -40px #080706,inset 0 -110px 140px -50px #080706;pointer-events:none}
+  .hero-quote{position:absolute;bottom:56px;right:56px;max-width:300px;text-align:right}
+  .hero-quote q{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;line-height:1.4;color:#f0e6ce}
+  .hero-quote cite{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:#9c8f6b;margin-top:12px;display:block;font-style:normal}
+
+  /* ── marquee ── */
+  .marquee{border-bottom:1px solid var(--hair);background:rgba(201,162,74,.03);overflow:hidden;box-shadow:inset 0 14px 26px -14px rgba(0,0,0,.9),inset 0 -14px 26px -14px rgba(0,0,0,.9)}
+  .marquee-track{display:flex;gap:56px;align-items:center;width:max-content;padding:26px 0;animation:marqueeScroll 34s linear infinite}
+  .marquee-track span{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#6f6960;white-space:nowrap;padding:0 28px}
+
+  /* ── section shell ── */
+  .wrap{max-width:1280px;margin:0 auto;padding:0 40px}
+  .section-head{display:flex;align-items:flex-end;gap:60px;flex-wrap:wrap}
+  .kicker{font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
+  .h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(38px,4.2vw,62px);line-height:1.06;color:#f4eddd;margin-top:20px}
+  .h2 em{font-style:italic;color:var(--gold-hi)}
+  .section-desc{font-size:16.5px;line-height:1.7;color:var(--muted);max-width:38ch;text-wrap:pretty}
+
+  /* ── bento ── */
+  .system{padding:140px 0 40px}
+  .bento{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;margin-top:64px}
+  .card{border:1px solid rgba(201,162,74,.18);background:linear-gradient(165deg,rgba(255,255,255,.045),rgba(255,255,255,.008) 42%,rgba(0,0,0,.22));padding:40px;border-radius:4px;position:relative;overflow:hidden;box-shadow:0 32px 60px -28px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,240,205,.07);transition:transform .5s cubic-bezier(.16,.84,.3,1),box-shadow .5s,border-color .4s}
+  .card:hover{border-color:rgba(201,162,74,.42);transform:translateY(-8px);box-shadow:0 52px 90px -30px rgba(0,0,0,.95),0 0 44px -18px rgba(201,162,74,.22),inset 0 1px 0 rgba(255,240,205,.12)}
+  .card-eyebrow{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+  .card-title{font-family:'Cormorant Garamond',serif;font-size:34px;color:#f2ebda;margin-top:14px}
+  .card-body{font-size:15.5px;line-height:1.7;color:#948d80;max-width:44ch;margin-top:14px}
+  .card-vault{grid-column:span 4;min-height:300px}
+  .card-graph{grid-column:span 2;min-height:300px;display:flex;flex-direction:column;padding:36px}
+  .card-graph .card-title{font-size:30px;line-height:1.15}
+  .card-evening{grid-column:span 2;min-height:280px;padding:36px}
+  .card-evening .card-title{font-size:30px;line-height:1.15}
+  .card-streak{grid-column:span 4;min-height:280px;padding:0}
+  .tree{display:flex;flex-direction:column;gap:2px;margin-top:28px;max-width:340px}
+  .tree-open{display:flex;gap:10px;padding:8px 12px;border-radius:3px;background:rgba(201,162,74,.12);color:var(--gold-hi);font-size:13.5px}
+  .tree-child{display:flex;gap:10px;padding:8px 12px 8px 30px;color:#b6afa0;font-size:13px}
+  .tree-row{display:flex;gap:10px;padding:8px 12px;color:#b6afa0;font-size:13.5px}
+  .tree-n{margin-left:auto;color:#9c8f6b}
+  .tree-n.dim{color:#5f594f}
+  .checklist{display:flex;flex-direction:column;gap:14px;margin-top:26px}
+  .check{display:flex;gap:12px;align-items:flex-start}
+  .dot-ring{width:18px;height:18px;border-radius:50%;border:1px solid var(--gold);flex:none;margin-top:2px}
+  .dot-fill{width:18px;height:18px;border-radius:50%;background:var(--gold);flex:none;margin-top:2px}
+  .check span{font-size:14.5px;color:#b6afa0;line-height:1.5}
+  .check.done span{color:#5f594f;text-decoration:line-through}
+  .streak-art{position:absolute;inset:0;width:100%;height:100%;background:
+    radial-gradient(ellipse 70% 60% at 74% 20%,rgba(232,200,119,.22),transparent 60%),
+    linear-gradient(75deg,#0c0b09 26%,#171410 66%,#221c13 100%)}
+  .streak-inner{position:relative;padding:40px;max-width:400px}
+  .streak-num{display:flex;align-items:baseline;gap:10px;margin-top:26px}
+  .streak-num b{font-family:'Cormorant Garamond',serif;font-size:54px;color:var(--gold-hi);line-height:1;font-weight:400}
+  .streak-num span{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2)}
+  @media (max-width:960px){ .bento{grid-template-columns:1fr} .card-vault,.card-graph,.card-evening,.card-streak{grid-column:span 1} }
+
+  /* ── command palette ── */
+  .command{padding:140px 0}
+  .command-head{text-align:center;max-width:660px;margin:0 auto}
+  .palette{max-width:760px;margin:56px auto 0;border:1px solid rgba(201,162,74,.3);border-radius:6px;background:linear-gradient(180deg,rgba(20,18,14,.96),rgba(11,10,8,.98));box-shadow:0 40px 90px -30px rgba(0,0,0,.9),0 0 60px -20px rgba(201,162,74,.18);overflow:hidden}
+  .palette-bar{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid rgba(201,162,74,.16)}
+  .palette-kbd{color:var(--gold);font-size:14px;font-weight:600;letter-spacing:.06em}
+  .palette-bar input{flex:1;background:transparent;border:none;outline:none;color:#f0e9d8;font-family:'Manrope',sans-serif;font-size:17px}
+  .palette-bar input::placeholder{color:#5f594f}
+  .palette-count{font-size:12px;color:#5f594f;letter-spacing:.1em;white-space:nowrap}
+  .palette-list{max-height:340px;overflow-y:auto;overflow-x:hidden;padding:10px}
+  .palette-row{display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:4px;cursor:default}
+  .palette-row:hover{background:rgba(201,162,74,.1)}
+  .palette-icon{width:30px;height:30px;flex:none;border:1px solid rgba(201,162,74,.34);border-radius:3px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:14px}
+  .palette-title{font-size:15px;color:#e8e0cf}
+  .palette-meta{font-size:12.5px;color:#6f6960;margin-top:3px}
+  .palette-kbdhint{margin-left:auto;font-size:11.5px;letter-spacing:.12em;color:#5f594f;text-transform:uppercase}
+  .palette-empty{padding:44px 16px;text-align:center;display:none}
+  .palette-empty p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:20px;color:#8d8578}
+  .palette-empty small{font-size:13px;color:#5f594f;margin-top:10px;display:block}
+
+  /* ── dashboard embed ── */
+  .dashboard-band{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);background:radial-gradient(ellipse 1100px 600px at 50% 0%,rgba(201,162,74,.08),transparent 62%)}
+  .dashboard-wrap{padding:120px 0}
+  .dashboard-head{display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap}
+  .dashboard-desc{font-size:15.5px;line-height:1.7;color:#948d80;max-width:34ch}
+  .browser-frame{margin-top:56px;border:1px solid rgba(201,162,74,.26);border-radius:8px;overflow:hidden;box-shadow:0 60px 120px -40px rgba(0,0,0,.95)}
+  .browser-chrome{height:38px;background:#100e0b;border-bottom:1px solid rgba(201,162,74,.16);display:flex;align-items:center;gap:8px;padding:0 16px}
+  .browser-chrome i{width:10px;height:10px;border-radius:50%;background:#3c362c}
+  .browser-chrome span{margin-left:18px;font-size:12px;color:#5f594f;letter-spacing:.08em}
+  .browser-viewport{position:relative;width:100%;aspect-ratio:1920/1080;background:#0a0908;overflow:hidden}
+  .cc-stage{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left}
+
+  /* ── Command Center (inlined dc-import) ── */
+  .cc{width:1920px;height:1080px;background:
+    radial-gradient(ellipse 900px 700px at 78% 8%,rgba(201,162,74,.09),transparent 60%),
+    radial-gradient(ellipse 1200px 900px at 10% 90%,rgba(120,110,95,.10),transparent 60%),#0b0a08;
+    font-family:'Manrope',sans-serif;color:#ece5d6;display:flex;overflow:hidden;position:relative}
+  .cc-rail{width:88px;flex:none;border-right:1px solid rgba(201,162,74,.14);display:flex;flex-direction:column;align-items:center;padding:28px 0;gap:36px;position:relative;z-index:2}
+  .cc-glyph{width:40px;height:40px;border:1px solid var(--gold);transform:rotate(45deg);display:flex;align-items:center;justify-content:center}
+  .cc-glyph i{width:14px;height:14px;background:var(--gold);transform:rotate(45deg)}
+  .cc-icons{display:flex;flex-direction:column;gap:26px;align-items:center;margin-top:10px}
+  .cc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#8a8377;font-size:17px}
+  .cc-icon.active{background:rgba(201,162,74,.14);border:1px solid rgba(201,162,74,.4);color:var(--gold-hi)}
+  .cc-avatar{margin-top:auto;width:32px;height:32px;border-radius:50%;border:1px solid rgba(201,162,74,.35);background:radial-gradient(circle at 35% 30%,#4a4032,#171410)}
+  .cc-main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;z-index:2}
+  .cc-top{height:84px;flex:none;display:flex;align-items:center;padding:0 40px;gap:28px;border-bottom:1px solid rgba(201,162,74,.14)}
+  .cc-word{font-family:'Cormorant Garamond',serif;font-size:26px;letter-spacing:.06em;color:#f1e9d8;white-space:nowrap}
+  .cc-word em{color:var(--gold);font-style:italic}
+  .cc-search{flex:1;max-width:640px;margin-left:24px;position:relative}
+  .cc-search-bar{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid rgba(201,162,74,.24);border-radius:10px;padding:11px 12px 11px 18px}
+  .cc-search-bar .kbd{color:var(--gold);font-size:15px;flex:none}
+  .cc-search-bar input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#ece5d6;font-family:'Manrope',sans-serif;font-size:15px;letter-spacing:.01em}
+  .cc-search-bar input::placeholder{color:#655f54}
+  .cc-ask-btn{flex:none;padding:7px 14px;border-radius:7px;border:1px solid rgba(201,162,74,.35);background:rgba(201,162,74,.12);color:var(--gold-hi);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;transition:background .24s}
+  .cc-ask-btn:hover{background:rgba(201,162,74,.22)}
+  .cc-panel{position:absolute;top:calc(100% + 10px);left:0;right:0;z-index:40;border:1px solid rgba(201,162,74,.28);border-radius:14px;background:rgba(12,11,9,.97);box-shadow:0 28px 70px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);backdrop-filter:blur(14px);overflow:hidden;display:none}
+  .cc-panel.open{display:block}
+  .cc-panel-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(201,162,74,.14)}
+  .cc-panel-head span{font-size:10.5px;letter-spacing:.18em;color:#7d766a;text-transform:uppercase}
+  .cc-panel-close{margin-left:auto;color:#7d766a;font-size:15px;line-height:1;background:none;border:none;padding:0}
+  .cc-panel-close:hover{color:#ece5d6}
+  .cc-shimmer{padding:20px 18px;display:none;flex-direction:column;gap:9px}
+  .cc-shimmer.show{display:flex}
+  .cc-shimmer i{height:9px;border-radius:5px;background:linear-gradient(90deg,rgba(201,162,74,.06),rgba(201,162,74,.24),rgba(201,162,74,.06));background-size:220% 100%;animation:shimmer 1.5s linear infinite;display:block}
+  .cc-shimmer i:nth-child(1){width:82%}
+  .cc-shimmer i:nth-child(2){width:66%;animation-delay:.18s}
+  .cc-shimmer i:nth-child(3){width:44%;animation-delay:.36s}
+  .cc-answer{padding:18px 20px 20px;display:none}
+  .cc-answer.show{display:block}
+  .cc-answer p{font-family:'Cormorant Garamond',serif;font-size:20px;line-height:1.5;color:#f2ebdb;text-wrap:pretty}
+  .cc-sources{display:none;flex-wrap:wrap;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(201,162,74,.12)}
+  .cc-sources.show{display:flex}
+  .cc-sources span{padding:5px 12px;border-radius:20px;border:1px solid rgba(201,162,74,.3);color:var(--gold);font-size:12px}
+  .cc-suggest{padding:8px 8px 10px;display:block}
+  .cc-suggest.hide{display:none}
+  .cc-suggest-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:9px;color:#c8c1b0;font-size:14px;width:100%;text-align:left;background:none;border:none;transition:background .2s}
+  .cc-suggest-row:hover{background:rgba(201,162,74,.1);color:#f1e9d8}
+  .cc-suggest-row b{color:var(--gold);font-size:12px;font-weight:400}
+  .cc-day{text-align:right}
+  .cc-day-label{font-size:11px;letter-spacing:.14em;color:#7d766a;text-transform:uppercase}
+  .cc-day-val{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold-hi)}
+  .cc-sep{width:1px;height:32px;background:rgba(201,162,74,.2)}
+  .cc-topright{margin-left:auto;display:flex;align-items:center;gap:22px}
+  .cc-body{flex:1;display:grid;grid-template-columns:300px 1fr 340px;gap:1px;background:rgba(201,162,74,.1);overflow:hidden}
+  .cc-col{background:#0a0908;padding:28px 22px;overflow:auto}
+  .cc-label{font-size:11px;letter-spacing:.16em;color:#7d766a;text-transform:uppercase;margin-bottom:16px}
+  .cc-tags{display:flex;flex-wrap:wrap;gap:8px}
+  .cc-tags span{padding:5px 12px;border-radius:20px;border:1px solid rgba(201,162,74,.3);color:var(--gold);font-size:12.5px}
+  .cc-center{padding:36px 44px;display:flex;flex-direction:column;gap:24px}
+  .cc-hero{position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(201,162,74,.25);min-height:300px;display:flex;align-items:stretch;background:
+    radial-gradient(ellipse 60% 60% at 75% 20%,rgba(232,200,119,.18),transparent 60%),
+    linear-gradient(120deg,#1c1810,#0d0b08 70%)}
+  .cc-hero-copy{position:relative;padding:36px 40px;display:flex;flex-direction:column;justify-content:center;gap:14px;max-width:560px}
+  .cc-hero-kicker{font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
+  .cc-hero-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:34px;line-height:1.28;color:#f4eddd}
+  .cc-hero-cite{font-size:14px;color:#9c8f6b;letter-spacing:.04em}
+  .cc-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+  .cc-stat{border:1px solid rgba(201,162,74,.18);border-radius:14px;padding:20px 22px;background:rgba(255,255,255,.015)}
+  .cc-stat-label{font-size:11px;letter-spacing:.14em;color:#7d766a;text-transform:uppercase}
+  .cc-stat-val{font-family:'Cormorant Garamond',serif;font-size:38px;color:var(--gold-hi);margin-top:6px}
+  .cc-stat-val small{font-size:16px;color:#7d766a;font-family:'Manrope',sans-serif}
+  .cc-reflect{border:1px solid rgba(201,162,74,.18);border-radius:14px;padding:24px 26px;flex:1;background:rgba(255,255,255,.015)}
+  .cc-right{display:flex;flex-direction:column;gap:26px}
+  .cc-note{display:flex;flex-direction:column;gap:3px;padding-bottom:12px;border-bottom:1px solid rgba(201,162,74,.1)}
+  .cc-note:last-child{border-bottom:none;padding-bottom:0}
+  .cc-note-title{font-size:14.5px;color:#e8e0cf}
+  .cc-note-meta{font-size:12px;color:#7d766a}
+  .cc-graph{position:relative;height:220px;border:1px solid rgba(201,162,74,.18);border-radius:14px;background:rgba(255,255,255,.015);overflow:hidden}
+  .cc-pull{margin-top:auto;border:1px solid rgba(201,162,74,.25);border-radius:14px;padding:18px 20px;background:rgba(201,162,74,.06)}
+  .cc-pull p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--gold-hi);line-height:1.5}
+  .cc-pull cite{font-size:11.5px;color:#7d766a;margin-top:8px;display:block;font-style:normal}
+
+  /* ── 365 days ── */
+  .days{padding:140px 0}
+  .days-head{text-align:center;max-width:640px;margin:0 auto}
+  .days-body{display:grid;grid-template-columns:1fr 340px;gap:48px;align-items:start;margin-top:64px}
+  .grid365{display:grid;grid-template-columns:repeat(auto-fill,minmax(15px,1fr));gap:6px}
+  .day-cell{aspect-ratio:1;border-radius:1px;cursor:crosshair;transition:transform .12s,background .18s}
+  .day-cell:hover{transform:scale(1.55);background:var(--gold-pale)!important}
+  .day-panel{border:1px solid rgba(201,162,74,.24);border-radius:4px;padding:32px;background:linear-gradient(165deg,rgba(201,162,74,.1),rgba(201,162,74,.03) 50%,rgba(0,0,0,.3));position:sticky;top:110px;box-shadow:0 36px 70px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,240,205,.09)}
+  .day-chapter{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:#7d766a}
+  .day-num{font-family:'Cormorant Garamond',serif;font-size:52px;color:var(--gold-hi);line-height:1;margin-top:10px}
+  .day-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:20px;line-height:1.45;color:#efe6cf;margin-top:22px}
+  .day-author{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9c8f6b;margin-top:16px}
+  .day-hr{height:1px;background:rgba(201,162,74,.2);margin:26px 0}
+  .day-prompt{font-size:14px;line-height:1.65;color:#948d80}
+  @media (max-width:900px){ .days-body{grid-template-columns:1fr} .day-panel{position:static} }
+
+  /* ── journal ── */
+  .journal{border-top:1px solid var(--hair);background:#0a0908}
+  .journal-grid{padding:130px 0;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+  .journal-art{position:relative;border-radius:4px;overflow:hidden;border:1px solid rgba(201,162,74,.22);box-shadow:0 50px 110px -40px rgba(0,0,0,.95);height:620px}
+  .journal-art-bg{position:absolute;inset:0;width:100%;height:100%;background:
+    radial-gradient(ellipse 70% 55% at 30% 20%,rgba(232,200,119,.16),transparent 60%),
+    linear-gradient(200deg,#221c13 0%,#120f0a 55%,#0a0908 100%)}
+  .journal-art-shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(8,7,6,.7))}
+  .journal-copy .card-body{max-width:44ch;font-size:17px;line-height:1.72;margin-top:24px;color:var(--muted)}
+  .journal-list{display:flex;flex-direction:column;gap:16px;margin-top:34px}
+  .journal-list div{display:flex;gap:14px;align-items:baseline}
+  .journal-list span:first-child{color:var(--gold);font-size:13px}
+  .journal-list span:last-child{font-size:15.5px;color:#c8c1b0}
+  @media (max-width:900px){ .journal-grid{grid-template-columns:1fr;gap:48px} .journal-art{height:420px} }
+
+  /* ── quote rotator ── */
+  .quote-band{border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+  .quote-inner{max-width:900px;margin:0 auto;padding:120px 40px;text-align:center}
+  .big-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(28px,3.4vw,46px);line-height:1.34;color:#f2ebda;min-height:5em;display:flex;align-items:center;justify-content:center;text-wrap:balance}
+  .big-author{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#9c8f6b;margin-top:22px}
+  .dots{display:flex;gap:10px;justify-content:center;margin-top:38px}
+  .dots button{width:34px;height:2px;background:rgba(201,162,74,.22);border:none;padding:0;transition:background .3s}
+  .dots button.active{background:var(--gold-hi)}
+
+  /* ── cta ── */
+  .cta-section{position:relative;overflow:hidden}
+  .cta-glow{position:absolute;inset:0;background:radial-gradient(ellipse 900px 500px at 50% 100%,rgba(232,160,60,.18),transparent 62%)}
+  .cta-inner{position:relative;max-width:820px;margin:0 auto;padding:150px 40px 160px;text-align:center}
+  .cta-glyph{width:44px;height:44px;border:1px solid var(--gold);transform:rotate(45deg);margin:0 auto 44px;display:flex;align-items:center;justify-content:center}
+  .cta-glyph i{width:15px;height:15px;background:var(--gold);transform:rotate(45deg)}
+  .cta-h{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(44px,5.2vw,78px);line-height:1.02;color:#f6efdf}
+  .cta-h em{font-style:italic;color:var(--gold-hi)}
+  .cta-p{font-size:18px;line-height:1.68;color:var(--muted);margin-top:26px;max-width:48ch;margin-left:auto;margin-right:auto}
+  .cta-form{display:flex;gap:12px;max-width:520px;margin:44px auto 0}
+  .cta-form input{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(201,162,74,.3);border-radius:2px;padding:17px 20px;color:#f0e9d8;font-family:'Manrope',sans-serif;font-size:15.5px;outline:none}
+  .cta-form input::placeholder{color:#655f54}
+  .cta-submit{padding:17px 30px;border-radius:2px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:#0b0a08;background:linear-gradient(140deg,var(--gold-hi),#b98f34);white-space:nowrap;border:none;transition:box-shadow .3s}
+  .cta-submit:hover{box-shadow:0 0 30px rgba(232,200,119,.45)}
+  .cta-fine{font-size:12.5px;color:#5f594f;margin-top:18px;letter-spacing:.06em}
+  @media (max-width:600px){ .cta-form{flex-direction:column} }
+
+  /* ── footer ── */
+  footer{border-top:1px solid var(--hair)}
+  .footer-inner{padding:56px 40px;display:flex;align-items:center;gap:40px;flex-wrap:wrap}
+  .footer-word{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.16em;color:#8d8578}
+  .footer-links{display:flex;gap:30px;flex-wrap:wrap}
+  .footer-links a{font-size:13px;color:#6f6960}
+  .footer-links a:hover{color:var(--gold-hi)}
+  .footer-note{margin-left:auto;font-size:12.5px;color:#4f4a43}
+
+  @media (max-width:960px){
+    .hero{grid-template-columns:1fr;min-height:auto}
+    .hero-copy{padding:150px 0 60px;padding-left:40px}
+    .hero-art{height:520px}
+    .section-head{align-items:flex-start}
+  }
+  @media (max-width:640px){
+    .hero-stats{gap:32px;flex-wrap:wrap}
+    .journal-grid,.days-body{gap:32px}
+  }
+</style>
+</head>
+<body>
+
+  <svg class="grain" preserveAspectRatio="none">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch"></feTurbulence></filter>
+    <rect width="100%" height="100%" filter="url(#grain)"></rect>
+  </svg>
+  <div class="vignette"></div>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="mark">
+        <div class="mark-glyph"><i></i></div>
+        <div class="mark-word">OBSIDIAN</div>
+      </div>
+      <div class="navlinks">
+        <a href="#system">The System</a>
+        <a href="#command">Command</a>
+        <a href="#days">365 Days</a>
+        <a href="#journal">Journal</a>
+      </div>
+      <div class="nav-right">
+        <a href="#command">Sign in</a>
+        <a href="#cta" class="btn-gold">Claim the Vault</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-glow"></div>
+    <div class="embers" id="embers"></div>
+    <div class="fog"></div>
+
+    <svg class="vein" viewBox="0 0 1400 920" preserveAspectRatio="xMidYMid slice" id="heroVein">
+      <path d="M-20 610 C 180 560, 240 700, 420 640 C 560 592, 640 706, 820 660 C 1000 614, 1140 720, 1420 650"></path>
+      <path d="M170 -10 C 210 160, 120 240, 190 400 C 240 520, 150 600, 205 760"></path>
+      <defs><linearGradient id="gv" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5c4718" stop-opacity="0"></stop><stop offset=".5" stop-color="#e8c877"></stop><stop offset="1" stop-color="#5c4718" stop-opacity="0"></stop></linearGradient></defs>
+    </svg>
+
+    <div class="hero-copy" id="heroCopy">
+      <div class="eyebrow">
+        <div class="rule"></div>
+        <span>A file system for the examined life</span>
+      </div>
+      <h1 class="h1">Order out of <em>chaos.</em></h1>
+      <p class="lede">Obsidian is the command center for your notes, your habits and your discipline — 365 days of Stoic practice wired into one graph you actually keep. Every fracture filled with gold.</p>
+      <div class="hero-ctas">
+        <a href="#cta" class="btn-gold-lg">Begin Day One</a>
+        <a href="#system" class="btn-outline">See the System</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>365</b><span>Daily meditations</span></div>
+        <div class="stat-sep"></div>
+        <div class="stat"><b>3</b><span>Prompts per night</span></div>
+        <div class="stat-sep"></div>
+        <div class="stat"><b>0</b><span>Cloud lock-in</span></div>
+      </div>
+    </div>
+
+    <div class="hero-art">
+      <div class="hero-art-inner" id="heroArtInner">
+        <div class="hero-art-panel">
+          <svg class="hero-art-cracks" viewBox="0 0 900 1200" preserveAspectRatio="xMidYMid slice">
+            <path d="M60 40 C 220 220, 140 380, 340 480 C 500 560, 420 760, 620 860 C 760 930, 700 1080, 860 1160" fill="none" stroke="#8a6d2a" stroke-width="2" opacity=".7"></path>
+            <path d="M820 30 C 700 160, 780 320, 560 420 C 400 490, 460 660, 260 760 C 120 830, 180 980, 40 1080" fill="none" stroke="#e8c877" stroke-width="1.4" opacity=".55"></path>
+            <path d="M0 700 C 160 660, 240 780, 420 720 C 580 666, 660 800, 900 750" fill="none" stroke="#c9a24a" stroke-width="1.2" opacity=".4"></path>
+          </svg>
+        </div>
+      </div>
+      <div class="hero-shade-a"></div>
+      <div class="hero-shade-b"></div>
+      <div class="hero-shade-c"></div>
+      <div class="hero-quote">
+        <q>The impediment to action advances action.</q>
+        <cite>Marcus Aurelius</cite>
+      </div>
+    </div>
+  </header>
+
+  <!-- MARQUEE -->
+  <div class="marquee">
+    <div class="marquee-track">
+      <span>Memento Mori</span><span>Amor Fati</span><span>Premeditatio Malorum</span><span>Dichotomy of Control</span><span>Sympatheia</span><span>Logos</span>
+      <span>Memento Mori</span><span>Amor Fati</span><span>Premeditatio Malorum</span><span>Dichotomy of Control</span><span>Sympatheia</span><span>Logos</span>
+    </div>
+  </div>
+
+  <!-- SYSTEM / BENTO -->
+  <section id="system" class="system wrap">
+    <div class="section-head reveal">
+      <div style="max-width:620px">
+        <div class="kicker">01 — The System</div>
+        <div class="h2">Four pieces. One <em>unbroken</em> practice.</div>
+      </div>
+      <p class="section-desc">Notes rot when they have no home. Obsidian gives every thought a folder, every folder a link, and every link a reason to be reopened tomorrow morning.</p>
+    </div>
+
+    <div class="bento">
+      <div class="card card-vault reveal">
+        <div class="card-eyebrow">The Vault</div>
+        <div class="card-title">Plain files. Yours forever.</div>
+        <div class="card-body">Markdown on your own disk. No database, no export button, no hostage situation.</div>
+        <div class="tree">
+          <div class="tree-open">▾ 01 · Discipline<span class="tree-n">42</span></div>
+          <div class="tree-child">Morning Rituals<span class="tree-n dim">12</span></div>
+          <div class="tree-row">▸ 04 · Memento Mori<span class="tree-n dim">6</span></div>
+          <div class="tree-row">▸ 06 · Seneca — Letters<span class="tree-n dim">54</span></div>
+        </div>
+      </div>
+
+      <div class="card card-graph reveal" data-d="1">
+        <div class="card-eyebrow">The Graph</div>
+        <div class="card-title">Ideas that find each other</div>
+        <svg viewBox="0 0 300 200" style="width:100%;margin-top:auto">
+          <line x1="150" y1="105" x2="76" y2="52" stroke="#433c28" stroke-width="1"></line>
+          <line x1="150" y1="105" x2="226" y2="48" stroke="#433c28" stroke-width="1"></line>
+          <line x1="150" y1="105" x2="54" y2="158" stroke="#433c28" stroke-width="1"></line>
+          <line x1="150" y1="105" x2="238" y2="162" stroke="#433c28" stroke-width="1"></line>
+          <line x1="150" y1="105" x2="150" y2="26" stroke="#433c28" stroke-width="1"></line>
+          <line x1="76" y1="52" x2="150" y2="26" stroke="#433c28" stroke-width="1"></line>
+          <line x1="226" y1="48" x2="238" y2="162" stroke="#433c28" stroke-width="1"></line>
+          <circle cx="150" cy="105" r="8" fill="#e8c877"></circle>
+          <circle cx="76" cy="52" r="4.5" fill="#8a7f5c"></circle>
+          <circle cx="226" cy="48" r="4.5" fill="#8a7f5c"></circle>
+          <circle cx="54" cy="158" r="4.5" fill="#8a7f5c"></circle>
+          <circle cx="238" cy="162" r="4.5" fill="#8a7f5c"></circle>
+          <circle cx="150" cy="26" r="4.5" fill="#8a7f5c"></circle>
+        </svg>
+      </div>
+
+      <div class="card card-evening reveal" data-d="2">
+        <div class="card-eyebrow">The Evening</div>
+        <div class="card-title">Three questions, every night</div>
+        <div class="checklist">
+          <div class="check"><div class="dot-ring"></div><span>What was in my control today?</span></div>
+          <div class="check"><div class="dot-ring"></div><span>Whose opinion cost me my peace?</span></div>
+          <div class="check done"><div class="dot-fill"></div><span>What would I regret on my last day?</span></div>
+        </div>
+      </div>
+
+      <div class="card card-streak reveal" data-d="3">
+        <div class="streak-art"></div>
+        <div class="streak-inner">
+          <div class="card-eyebrow">The Streak</div>
+          <div class="card-title">Discipline you can see cracking — and mending</div>
+          <div class="card-body" style="color:#a8a193">Miss a day and the vein shows. Fill it with gold the next morning. Kintsugi, not shame.</div>
+          <div class="streak-num"><b>27</b><span>day streak</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMAND PALETTE -->
+  <section id="command" class="command wrap">
+    <div class="command-head reveal">
+      <div class="kicker">02 — Command</div>
+      <div class="h2">One keystroke from <em>anything</em></div>
+      <p class="section-desc" style="margin:20px auto 0;max-width:52ch">Type below — this is the real palette. No menus, no mouse, no excuse.</p>
+    </div>
+
+    <div class="palette reveal">
+      <div class="palette-bar">
+        <span class="palette-kbd">⌘K</span>
+        <input id="paletteInput" type="text" placeholder="Search the vault, or command your day…" autocomplete="off">
+        <span class="palette-count" id="paletteCount"></span>
+      </div>
+      <div class="palette-list" id="paletteList"></div>
+      <div class="palette-empty" id="paletteEmpty">
+        <p>Nothing here. "The obstacle is the way."</p>
+        <small>Press ⏎ to create a note by that name.</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE DASHBOARD -->
+  <section class="dashboard-band">
+    <div class="dashboard-wrap wrap">
+      <div class="dashboard-head reveal">
+        <div>
+          <div class="kicker">03 — The Command Center</div>
+          <div class="h2" style="font-size:clamp(34px,3.6vw,52px)">Your whole morning, on one screen</div>
+        </div>
+        <p class="dashboard-desc">Meditation, streak, prompts, graph and recents — no tab-hopping before sunrise.</p>
+      </div>
+
+      <div class="browser-frame reveal">
+        <div class="browser-chrome"><i></i><i></i><i></i><span>obsidian://vault/discipline</span></div>
+        <div class="browser-viewport">
+          <div class="cc-stage" id="ccStage">
+            <div class="cc">
+              <div class="cc-rail">
+                <div class="cc-glyph"><i></i></div>
+                <div class="cc-icons">
+                  <div class="cc-icon active" title="Vault">◆</div>
+                  <div class="cc-icon" title="Graph">◈</div>
+                  <div class="cc-icon" title="Search">⚲</div>
+                  <div class="cc-icon" title="Tags">#</div>
+                  <div class="cc-icon" title="Archive">▣</div>
+                </div>
+                <div class="cc-avatar"></div>
+              </div>
+              <div class="cc-main">
+                <div class="cc-top">
+                  <div class="cc-word">OBSIDIAN <em>Command</em></div>
+                  <div class="cc-search">
+                    <div class="cc-search-bar">
+                      <span class="kbd">⌘K</span>
+                      <input id="ccQuery" type="text" placeholder="Ask the vault, or command your day…" autocomplete="off">
+                      <button class="cc-ask-btn" id="ccAskBtn">Ask ↵</button>
+                    </div>
+                    <div class="cc-panel" id="ccPanel">
+                      <div class="cc-panel-head">
+                        <span id="ccPanelLabel">Try asking</span>
+                        <button class="cc-panel-close" id="ccClose">✕</button>
+                      </div>
+                      <div class="cc-shimmer" id="ccShimmer"><i></i><i></i><i></i></div>
+                      <div class="cc-answer" id="ccAnswer">
+                        <p id="ccAnswerText"></p>
+                        <div class="cc-sources" id="ccSources"></div>
+                      </div>
+                      <div class="cc-suggest" id="ccSuggest"></div>
+                    </div>
+                  </div>
+                  <div class="cc-topright">
+                    <div class="cc-day"><div class="cc-day-label">Day</div><div class="cc-day-val">241 of 365</div></div>
+                    <div class="cc-sep"></div>
+                    <div class="cc-day"><div class="cc-day-label">Discipline</div><div class="cc-day-val">Amor Fati</div></div>
+                  </div>
+                </div>
+                <div class="cc-body">
+                  <div class="cc-col">
+                    <div class="cc-label">Vault</div>
+                    <div class="tree">
+                      <div class="tree-open">▾ &nbsp;01 · Discipline<span class="tree-n">42</span></div>
+                      <div class="tree-child">Morning Rituals<span class="tree-n dim">12</span></div>
+                      <div class="tree-child">Cold Exposure<span class="tree-n dim">8</span></div>
+                      <div class="tree-row">▸ &nbsp;02 · Reflections<span class="tree-n dim">88</span></div>
+                      <div class="tree-row">▸ &nbsp;03 · Dichotomy of Control<span class="tree-n dim">19</span></div>
+                      <div class="tree-row">▸ &nbsp;04 · Memento Mori<span class="tree-n dim">6</span></div>
+                      <div class="tree-row">▸ &nbsp;05 · Marcus Aurelius<span class="tree-n dim">31</span></div>
+                      <div class="tree-row">▸ &nbsp;06 · Seneca — Letters<span class="tree-n dim">54</span></div>
+                      <div class="tree-row">▸ &nbsp;07 · Epictetus</div>
+                      <div class="tree-row">▸ &nbsp;08 · Archive</div>
+                    </div>
+                    <div class="cc-label" style="margin:26px 0 12px">Tags</div>
+                    <div class="cc-tags"><span>#virtue</span><span>#control</span><span>#logos</span><span>#discipline</span></div>
+                  </div>
+                  <div class="cc-center">
+                    <div class="cc-hero">
+                      <div class="cc-hero-copy">
+                        <div class="cc-hero-kicker">Today's Meditation · Day 241</div>
+                        <div class="cc-hero-quote">"You have power over your mind — not outside events. Realize this, and you will find strength."</div>
+                        <div class="cc-hero-cite">— Marcus Aurelius, Meditations</div>
+                      </div>
+                    </div>
+                    <div class="cc-stats">
+                      <div class="cc-stat"><div class="cc-stat-label">Streak</div><div class="cc-stat-val">27 <small>days</small></div></div>
+                      <div class="cc-stat"><div class="cc-stat-label">Notes Written</div><div class="cc-stat-val">1,248</div></div>
+                      <div class="cc-stat"><div class="cc-stat-label">Virtue Score</div><div class="cc-stat-val">92<small>/100</small></div></div>
+                    </div>
+                    <div class="cc-reflect">
+                      <div class="cc-label" style="margin-bottom:14px">Evening Reflection · 3 Prompts</div>
+                      <div class="checklist">
+                        <div class="check"><div class="dot-ring"></div><span>What did I do today that was within my control?</span></div>
+                        <div class="check"><div class="dot-ring"></div><span>Where did I let an outside opinion disturb my peace?</span></div>
+                        <div class="check done"><div class="dot-fill"></div><span>What would I regret on my last day?</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="cc-col cc-right">
+                    <div>
+                      <div class="cc-label">Recent Notes</div>
+                      <div class="cc-note"><div class="cc-note-title">On the Shortness of Life</div><div class="cc-note-meta">Seneca — edited 2h ago</div></div>
+                      <div class="cc-note"><div class="cc-note-title">Enchiridion, Ch. 8</div><div class="cc-note-meta">Epictetus — edited yesterday</div></div>
+                      <div class="cc-note"><div class="cc-note-title">Negative Visualization</div><div class="cc-note-meta">Personal — edited 2 days ago</div></div>
+                      <div class="cc-note"><div class="cc-note-title">Book V — Meditations</div><div class="cc-note-meta">Marcus Aurelius — edited 3 days ago</div></div>
+                    </div>
+                    <div>
+                      <div class="cc-label">Vault Graph</div>
+                      <div class="cc-graph">
+                        <svg viewBox="0 0 300 220" style="width:100%;height:100%">
+                          <line x1="150" y1="110" x2="80" y2="60" stroke="#3a3527" stroke-width="1"></line>
+                          <line x1="150" y1="110" x2="220" y2="55" stroke="#3a3527" stroke-width="1"></line>
+                          <line x1="150" y1="110" x2="60" y2="160" stroke="#3a3527" stroke-width="1"></line>
+                          <line x1="150" y1="110" x2="230" y2="165" stroke="#3a3527" stroke-width="1"></line>
+                          <line x1="150" y1="110" x2="150" y2="35" stroke="#3a3527" stroke-width="1"></line>
+                          <line x1="80" y1="60" x2="150" y2="35" stroke="#3a3527" stroke-width="1"></line>
+                          <line x1="220" y1="55" x2="230" y2="165" stroke="#3a3527" stroke-width="1"></line>
+                          <circle cx="150" cy="110" r="7" fill="#e8c877"></circle>
+                          <circle cx="80" cy="60" r="4" fill="#8a7f5c"></circle>
+                          <circle cx="220" cy="55" r="4" fill="#8a7f5c"></circle>
+                          <circle cx="60" cy="160" r="4" fill="#8a7f5c"></circle>
+                          <circle cx="230" cy="165" r="4" fill="#8a7f5c"></circle>
+                          <circle cx="150" cy="35" r="4" fill="#8a7f5c"></circle>
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="cc-pull">
+                      <p>"He who fears death will never do anything worthy of a living man."</p>
+                      <cite>— Seneca</cite>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 365 DAYS -->
+  <section id="days" class="days wrap">
+    <div class="days-head reveal">
+      <div class="kicker">04 — 365 Days</div>
+      <div class="h2">A year, laid out as it truly is — <em>finite</em></div>
+      <p class="section-desc" style="margin:20px auto 0;max-width:52ch">Hover any day. Every thirtieth is a chapter of the practice.</p>
+    </div>
+
+    <div class="days-body reveal">
+      <div class="grid365" id="grid365"></div>
+      <div class="day-panel">
+        <div class="day-chapter" id="dayChapter"></div>
+        <div class="day-num" id="dayNum"></div>
+        <div class="day-quote" id="dayQuote"></div>
+        <div class="day-author" id="dayAuthor"></div>
+        <div class="day-hr"></div>
+        <div class="day-prompt" id="dayPrompt"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section id="journal" class="journal">
+    <div class="journal-grid wrap">
+      <div class="journal-art reveal">
+        <div class="journal-art-bg"></div>
+        <div class="journal-art-shade"></div>
+      </div>
+      <div class="journal-copy reveal" data-d="1">
+        <div class="kicker">05 — The Analog Half</div>
+        <div class="h2" style="font-size:clamp(36px,3.9vw,58px)">The journal that ships with the vault</div>
+        <p class="card-body">A 365-day guided Stoic journal for men building mental toughness, emotional resilience and lasting self-discipline — drawn from Marcus Aurelius, Seneca and Epictetus. Write it by hand at night; the vault syncs the thinking by morning.</p>
+        <div class="journal-list">
+          <div><span>◆</span><span>365 dated entries, one page each — no blank-page paralysis</span></div>
+          <div><span>◆</span><span>Morning intention, evening review, weekly audit</span></div>
+          <div><span>◆</span><span>Gold-leaf kintsugi cover, lay-flat binding</span></div>
+        </div>
+        <a href="#cta" class="btn-gold-lg" style="margin-top:38px;display:inline-block">Get the Bundle</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE ROTATOR -->
+  <section class="quote-band">
+    <div class="quote-inner">
+      <div class="big-quote" id="bigQuote"></div>
+      <div class="big-author" id="bigAuthor"></div>
+      <div class="dots" id="quoteDots"></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta" class="cta-section">
+    <div class="cta-glow"></div>
+    <div class="cta-inner">
+      <div class="cta-glyph"><i></i></div>
+      <div class="cta-h">You could leave life <em>right now.</em></div>
+      <p class="cta-p">Let that determine what you do — starting with the first note. Free while the vault is in private practice.</p>
+      <form class="cta-form" id="ctaForm">
+        <input type="email" placeholder="your@email.com" required>
+        <button type="submit" class="cta-submit">Begin Day One</button>
+      </form>
+      <div class="cta-fine">Local-first. No tracking. Cancel by deleting a folder.</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner wrap">
+      <div class="footer-word">OBSIDIAN</div>
+      <div class="footer-links">
+        <a href="#system">System</a>
+        <a href="#command">Command</a>
+        <a href="#days">365 Days</a>
+        <a href="#journal">Journal</a>
+      </div>
+      <div class="footer-note">Memento mori · Built for the examined life</div>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ── scroll progress + hero parallax ── */
+  var progressFill = document.getElementById("progressFill");
+  var heroArtInner = document.getElementById("heroArtInner");
+  var heroVein = document.getElementById("heroVein");
+  var heroCopy = document.getElementById("heroCopy");
+  var ticking = false;
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      var h = document.documentElement;
+      var max = h.scrollHeight - h.clientHeight;
+      var y = h.scrollTop || document.body.scrollTop;
+      var progress = max > 0 ? y / max : 0;
+      progressFill.style.width = (progress * 100).toFixed(2) + "%";
+      heroArtInner.style.transform = "translate3d(0," + (y * 0.22).toFixed(1) + "px,0) scale(" + (1 + Math.min(y, 900) * 0.00012).toFixed(4) + ")";
+      heroVein.style.transform = "translate3d(0," + (y * -0.09).toFixed(1) + "px,0)";
+      heroCopy.style.transform = "translate3d(0," + (y * 0.06).toFixed(1) + "px,0)";
+      ticking = false;
+    });
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ── floating embers ── */
+  var emberField = document.getElementById("embers");
+  var emberSpots = [
+    { l: "52%", b: "16%", s: 3, dur: 9, delay: 0.2 },
+    { l: "63%", b: "9%", s: 2, dur: 12, delay: 2.4 },
+    { l: "71%", b: "22%", s: 4, dur: 11, delay: 4.1 },
+    { l: "44%", b: "5%", s: 2, dur: 14, delay: 1.3 },
+    { l: "81%", b: "30%", s: 3, dur: 10, delay: 6 }
+  ];
+  emberSpots.forEach(function (e) {
+    var i = document.createElement("i");
+    i.style.left = e.l;
+    i.style.bottom = e.b;
+    i.style.width = e.s + "px";
+    i.style.height = e.s + "px";
+    i.style.animationDuration = e.dur + "s";
+    i.style.animationDelay = e.delay + "s";
+    emberField.appendChild(i);
+  });
+
+  /* ── reveal on scroll ── */
+  var revealTargets = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0, rootMargin: "0px 0px -4% 0px" });
+  revealTargets.forEach(function (el) { obs.observe(el); });
+  setInterval(function () {
+    revealTargets.forEach(function (el) {
+      if (el.classList.contains("is-visible")) return;
+      var r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) el.classList.add("is-visible");
+    });
+  }, 700);
+
+  /* ── command palette ── */
+  var CMDS = [
+    { icon: "◆", title: "Open today's meditation", meta: "Day 241 · Amor Fati", kbd: "⏎" },
+    { icon: "✎", title: "New evening reflection", meta: "02 · Reflections", kbd: "⌘N" },
+    { icon: "◈", title: "Open graph view", meta: "1,248 notes · 3,102 links", kbd: "⌘G" },
+    { icon: "☾", title: "Jump to Memento Mori", meta: "04 · 6 notes", kbd: "⌘4" },
+    { icon: "✦", title: "Seneca — Letters to Lucilius", meta: "06 · 54 notes", kbd: "⌘6" },
+    { icon: "▣", title: "Review the archive", meta: "08 · 411 notes", kbd: "⌘8" },
+    { icon: "◷", title: "Start a cold-exposure timer", meta: "01 · Discipline", kbd: "⌘T" },
+    { icon: "#", title: "Filter by #dichotomy-of-control", meta: "19 notes", kbd: "⌘⇧F" }
+  ];
+  var paletteInput = document.getElementById("paletteInput");
+  var paletteList = document.getElementById("paletteList");
+  var paletteCount = document.getElementById("paletteCount");
+  var paletteEmpty = document.getElementById("paletteEmpty");
+
+  function renderPalette() {
+    var q = paletteInput.value.trim().toLowerCase();
+    var results = q ? CMDS.filter(function (c) { return (c.title + " " + c.meta).toLowerCase().indexOf(q) !== -1; }) : CMDS;
+    paletteList.innerHTML = results.map(function (r) {
+      return '<div class="palette-row"><div class="palette-icon">' + r.icon + '</div><div><div class="palette-title">' + r.title + '</div><div class="palette-meta">' + r.meta + '</div></div><div class="palette-kbdhint">' + r.kbd + '</div></div>';
+    }).join("");
+    paletteCount.textContent = results.length + (results.length === 1 ? " result" : " results");
+    paletteEmpty.style.display = results.length === 0 ? "block" : "none";
+    paletteList.style.display = results.length === 0 ? "none" : "block";
+  }
+  paletteInput.addEventListener("input", renderPalette);
+  renderPalette();
+
+  /* ── vault corpus shared by the command-center "ask" mock ── */
+  var VAULT = [
+    { title: "On the Shortness of Life", folder: "06 · Seneca — Letters", body: "Seneca argues most people squander time on trivialities and only notice its scarcity at the end. Practical remedy: audit where hours actually go, refuse obligations that are not yours, treat time as the only non-renewable asset." },
+    { title: "Enchiridion, Ch. 8", folder: "07 · Epictetus", body: "Do not wish events to be as you want; wish them to be as they are, and you will be serene. Core of amor fati — acceptance precedes effective action." },
+    { title: "Negative Visualization", folder: "02 · Reflections", body: "Premeditatio malorum. Each morning, rehearse plausible losses — a missed deadline, an unkind word, illness — so that reality arrives pre-absorbed. Reduces reactivity; increases gratitude for what still holds." },
+    { title: "Book V — Meditations", folder: "05 · Marcus Aurelius", body: "At dawn, when rising is hard, remember you were made for the work of a human being. The obstacle is the material of the work." },
+    { title: "Morning Rituals", folder: "01 · Discipline", body: "Current stack: wake 5:20, no phone for 60 minutes, cold shower, 20 minutes journaling against three prompts, 45 minutes deep work before any inbox. Streak 27 days; failures cluster on travel days." },
+    { title: "Cold Exposure", folder: "01 · Discipline", body: "Two-minute cold finish, six days a week. Value is not the cold — it is the rehearsed decision to do the hard thing on schedule while unmotivated." },
+    { title: "Dichotomy of Control — Working Notes", folder: "03 · Dichotomy of Control", body: "Sort every anxiety into two columns: my judgment and action, versus outcome and other minds. Anything in column two gets one plan and no further rumination." },
+    { title: "Memento Mori Ledger", folder: "04 · Memento Mori", body: "Day 241 of 365. Roughly 9,700 weeks in an average life. Reviewed quarterly to test whether current commitments would survive a last-day audit." }
+  ];
+  var STOP = { the: 1, a: 1, an: 1, of: 1, to: 1, is: 1, my: 1, and: 1, in: 1, on: 1, what: 1, where: 1, does: 1, do: 1, say: 1, about: 1, for: 1, me: 1, one: 1, give: 1 };
+
+  function localAnswer(query) {
+    var words = query.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(function (w) { return w && !STOP[w]; });
+    var scored = VAULT.map(function (note) {
+      var hay = (note.title + " " + note.folder + " " + note.body).toLowerCase();
+      var score = words.reduce(function (s, w) { return s + (hay.indexOf(w) !== -1 ? 1 : 0); }, 0);
+      return { note: note, score: score };
+    }).filter(function (s) { return s.score > 0; }).sort(function (a, b) { return b.score - a.score; });
+
+    if (!scored.length) {
+      return { answer: "Nothing in the vault answers that directly. Try asking about discipline, control, or mortality.", sources: [] };
+    }
+    var top = scored.slice(0, Math.min(2, scored.length));
+    var answer = top[0].note.body;
+    if (answer.length > 220) answer = answer.slice(0, 220).replace(/\s+\S*$/, "") + "…";
+    return { answer: answer, sources: top.map(function (s) { return s.note.title; }) };
+  }
+
+  function wireAsk(refs) {
+    var busy = false;
+    function open() { refs.panel.classList.add("open"); }
+    function close() {
+      refs.panel.classList.remove("open");
+      refs.shimmer.classList.remove("show");
+      refs.answerBox.classList.remove("show");
+      refs.sources.classList.remove("show");
+      refs.suggest.classList.remove("hide");
+      refs.label.textContent = "Try asking";
+    }
+    function runAsk(q) {
+      var query = (q !== undefined ? q : refs.input.value).trim();
+      if (!query || busy) return;
+      refs.input.value = query;
+      busy = true;
+      open();
+      refs.label.textContent = "Consulting the vault";
+      refs.suggest.classList.add("hide");
+      refs.answerBox.classList.remove("show");
+      refs.sources.classList.remove("show");
+      refs.shimmer.classList.add("show");
+      setTimeout(function () {
+        var result = localAnswer(query);
+        refs.shimmer.classList.remove("show");
+        refs.answerText.textContent = result.answer;
+        refs.answerBox.classList.add("show");
+        if (result.sources.length) {
+          refs.sources.innerHTML = result.sources.map(function (t) { return "<span>◆ " + t + "</span>"; }).join("");
+          refs.sources.classList.add("show");
+        }
+        refs.label.textContent = "Vault answer";
+        busy = false;
+      }, 550);
+    }
+    refs.input.addEventListener("focus", open);
+    refs.input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") runAsk();
+      if (e.key === "Escape") close();
+    });
+    refs.askBtn.addEventListener("click", function () { runAsk(); });
+    refs.closeBtn.addEventListener("click", close);
+    var suggestions = [
+      "What is actually within my control today?",
+      "Summarize my morning ritual and where it breaks",
+      "What does Seneca say about wasted time?",
+      "Give me one practice for tomorrow"
+    ];
+    refs.suggest.innerHTML = suggestions.map(function (s, i) {
+      return '<button class="cc-suggest-row" data-i="' + i + '"><b>⌁</b>' + s + "</button>";
+    }).join("");
+    Array.prototype.slice.call(refs.suggest.querySelectorAll(".cc-suggest-row")).forEach(function (btn) {
+      btn.addEventListener("click", function () { runAsk(suggestions[+btn.dataset.i]); });
+    });
+    document.addEventListener("click", function (e) {
+      if (!refs.root.contains(e.target)) close();
+    });
+  }
+
+  wireAsk({
+    root: document.getElementById("ccQuery").closest(".cc-search"),
+    input: document.getElementById("ccQuery"),
+    askBtn: document.getElementById("ccAskBtn"),
+    closeBtn: document.getElementById("ccClose"),
+    panel: document.getElementById("ccPanel"),
+    label: document.getElementById("ccPanelLabel"),
+    shimmer: document.getElementById("ccShimmer"),
+    answerBox: document.getElementById("ccAnswer"),
+    answerText: document.getElementById("ccAnswerText"),
+    sources: document.getElementById("ccSources"),
+    suggest: document.getElementById("ccSuggest")
+  });
+
+  /* ── scale the embedded Command Center to fit its browser frame ── */
+  var ccStage = document.getElementById("ccStage");
+  var ccViewport = ccStage.parentElement;
+  function fitDashboard() {
+    var scale = ccViewport.clientWidth / 1920;
+    ccStage.style.transform = "scale(" + scale + ")";
+  }
+  window.addEventListener("resize", fitDashboard);
+  fitDashboard();
+
+  /* ── 365 day grid ── */
+  var CHAPTERS = [
+    { n: "Chapter I", t: "The Dichotomy of Control", p: "Name one thing today that was never yours to command. Set it down in writing, then set it down entirely." },
+    { n: "Chapter II", t: "Premeditatio Malorum", p: "Rehearse the loss before it arrives. What would you still have left, and would it be enough?" },
+    { n: "Chapter III", t: "Amor Fati", p: "Take the worst thing that happened this week and argue, in ink, for why you would choose it again." },
+    { n: "Chapter IV", t: "Memento Mori", p: "Count the mornings you have likely left. Let the number decide what gets your next hour." }
+  ];
+  var QUOTES = [
+    { q: "You have power over your mind — not outside events. Realize this, and you will find strength.", a: "Marcus Aurelius" },
+    { q: "We suffer more often in imagination than in reality.", a: "Seneca" },
+    { q: "It is not things that disturb us, but our judgements about things.", a: "Epictetus" },
+    { q: "He who fears death will never do anything worthy of a living man.", a: "Seneca" }
+  ];
+  var CURRENT_DAY = 241;
+  var grid365 = document.getElementById("grid365");
+  var dayChapter = document.getElementById("dayChapter");
+  var dayNum = document.getElementById("dayNum");
+  var dayQuote = document.getElementById("dayQuote");
+  var dayAuthor = document.getElementById("dayAuthor");
+  var dayPrompt = document.getElementById("dayPrompt");
+
+  function showDay(day) {
+    var ch = CHAPTERS[Math.min(3, Math.floor((day - 1) / 92))];
+    var quote = QUOTES[(day - 1) % QUOTES.length];
+    dayChapter.textContent = ch.n + " — " + ch.t;
+    dayNum.textContent = String(day).padStart(3, "0");
+    dayQuote.textContent = "“" + quote.q + "”";
+    dayAuthor.textContent = quote.a;
+    dayPrompt.textContent = ch.p;
+  }
+
+  var dayFrag = document.createDocumentFragment();
+  for (var i = 1; i <= 365; i++) {
+    (function (i) {
+      var milestone = i % 30 === 0;
+      var cell = document.createElement("div");
+      cell.className = "day-cell";
+      cell.title = "Day " + i;
+      cell.style.background = i === CURRENT_DAY ? "#f0d68f" : i < CURRENT_DAY ? (milestone ? "#c9a24a" : "#4a4234") : (milestone ? "#3a3428" : "#1c1a15");
+      cell.style.border = milestone ? "1px solid rgba(232,200,119,.5)" : "1px solid transparent";
+      cell.addEventListener("mouseenter", function () { showDay(i); });
+      dayFrag.appendChild(cell);
+    })(i);
+  }
+  grid365.appendChild(dayFrag);
+  showDay(CURRENT_DAY);
+
+  /* ── quote rotator ── */
+  var bigQuote = document.getElementById("bigQuote");
+  var bigAuthor = document.getElementById("bigAuthor");
+  var quoteDots = document.getElementById("quoteDots");
+  var qi = 0;
+
+  function renderQuote() {
+    var cur = QUOTES[qi];
+    bigQuote.textContent = "“" + cur.q + "”";
+    bigAuthor.textContent = cur.a;
+    Array.prototype.slice.call(quoteDots.children).forEach(function (d, i) {
+      d.classList.toggle("active", i === qi);
+    });
+  }
+  QUOTES.forEach(function (_, i) {
+    var b = document.createElement("button");
+    b.addEventListener("click", function () { qi = i; renderQuote(); resetQuoteTimer(); });
+    quoteDots.appendChild(b);
+  });
+  renderQuote();
+
+  var quoteTimer;
+  function resetQuoteTimer() {
+    clearInterval(quoteTimer);
+    quoteTimer = setInterval(function () { qi = (qi + 1) % QUOTES.length; renderQuote(); }, 6500);
+  }
+  resetQuoteTimer();
+
+  /* ── CTA form (static demo — no backend) ── */
+  document.getElementById("ctaForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = e.target.querySelector(".cta-submit");
+    var original = btn.textContent;
+    btn.textContent = "Welcome to Day One";
+    btn.disabled = true;
+    setTimeout(function () { btn.textContent = original; btn.disabled = false; e.target.reset(); }, 2200);
+  });
+})();
+</script>
+</body>
+</html>
